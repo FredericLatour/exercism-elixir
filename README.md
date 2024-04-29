@@ -14,3 +14,5 @@ Elixir is a relatively approachable functional programming language. Whether you
 - Immutability
 
 Mastering these concepts often provides additional tools for problem-solving, enriching your programming skill set regardless of the language you primarily use.
+
+For those exercises that are not part of a track, tests are included within the exercise itself. I have copied these tests into a separate file named after the exercise. Therefore, you can use this repository to conveniently have the tests ready to use alongside your own solutions.
