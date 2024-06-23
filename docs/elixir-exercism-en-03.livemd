@@ -1,0 +1,661 @@
+## typespecs
+
+Elixir is a dynamically typed language, which means it doesn't provide compile-time type checks. Still, type specifications can be useful because they:
+
+- Serve as documentation.
+- Can be used by static analysis tools like [Dialyzer][dialyzer] to find possible bugs.
+
+A type specification can be added to a function using the `@spec` module attribute right before the function definition.
+
+```elixir
+@spec longer_than?(String.t(), non_neg_integer()) :: boolean()
+def longer_than?(string, length), do: String.length(string) > length
+```
+
+## Types
+
+Expressions allowed in a typespec:
+
+- Basic types, for example:
+    - `boolean()`
+    - `integer()`, `non_neg_integer()`, `pos_integer()`, `float()`
+    - `list()`
+    - `map()`
+    - `any()`
+
+- A union of types:
+    - e.g. `integer() | list(integer())`
+
+- Parameterized types:
+    - e.g. `list(integer())` - a list of integers
+    - e.g. `%{age: integer()}` - map with an integer value under the key `:age`
+
+- Remote types (defined in some module), for example:
+    - [`String.t()`][string-t]
+    - [`Enum.t()`][enum-t]
+    - [`Range.t()`][range-t]
+
+- Literals, for example:
+    - `%{}` - an empty map
+    - `[]` - an empty list (but `[any()]` is a non-empty list)
+    - e.g. `:ok` - an atom literal
+
+- Built-in specialized types, for example:
+    - `char()` - an integer from the range `0..0x10FFFF`
+    - `charlist()` - a list of chars
+    - `keyword()` - a list of two element tuples, where the first element is an atom
+
+- Custom types
+
+A full list of all types can be found in the ["Typespecs" section in the official documentation][types].
+
+## Naming arguments
+
+Arguments in the typespec could also be named which is useful for distinguishing multiple arguments of the same type.
+
+```elixir
+@spec to_hex({hue :: integer, saturation :: integer, lightness :: integer}) :: String.t()
+```
+
+## Custom types
+
+Custom types can be defined in using one of the three module attributes:
+
+- `@type` - defines a public type
+- `@typep` - defines a private type
+- `@opaque` - defines a public type whose structure is private
+
+```elixir
+@type color :: {hue :: integer, saturation :: integer, lightness :: integer}
+
+@spec to_hex(color()) :: String.t()
+```
+
+## `String.t()` vs `binary()` vs `string()`
+
+[`String.t()`][string-t] is the correct type to use for Elixir strings, which are UTF-8 encoded binaries. Technically, `String.t()` is defined as a `binary()`, and those two types are equivalent to analysis tools, but `String.t()` is the more intention-revealing choice for documenting functions that work with Elixir strings.
+
+On the other hand, `string()` is a different type. It's an Erlang string, in Elixir known as a charlist. The `string()` type should be avoided in typespecs and `charlist()` should be used instead.
+
+## Dialyzer
+
+[Dialyzer][dialyzer] is a static analysis tool that can detect problems such as type errors in Erlang and Elixir code. The easiest way to use Dialyzer in an Elixir project is with [Dialyxir][dialyxir].
+
+[types]: https://hexdocs.pm/elixir/typespecs.html#types-and-their-syntax
+[string-t]: https://hexdocs.pm/elixir/String.html#t:t/0
+[enum-t]: https://hexdocs.pm/elixir/Enum.html#t:t/0
+[range-t]: https://hexdocs.pm/elixir/Range.html#t:t/0
+[dialyzer]: https://www.erlang.org/doc/man/dialyzer.html
+[dialyxir]: https://hexdocs.pm/dialyxir/readme.html
+
+
+## Case
+
+[`case`][case] is a control flow structure that allows us to compare a given value against many patterns. Clauses in a `case` expression are evaluated from top to bottom, until a match is found.
+
+In many cases, using `case` is interchangeable with defining [multiple function clauses][exercism-multiple-clause-functions]. [Pattern matching][exercism-pattern-matching] and [guards][exercism-guards] can be used in `case` clauses.
+
+```elixir
+# one function clause, multiple case clauses
+def age_group(age) do
+  case age do
+    0 -> ~c"infant"
+    age when age < 4 -> ~c"baby"
+    age when age < 13 -> ~c"child"
+    age when age < 18 -> ~c"teenager"
+    _ -> ~c"adult"
+  end
+end
+
+# multiple function clauses, no case
+def age_group(0), do: ~c"infant"
+def age_group(age) when age < 4, do: ~c"baby"
+def age_group(age) when age < 13, do: ~c"child"
+def age_group(age) when age < 18, do: ~c"teenager"
+def age_group(_), do: ~c"adult"
+```
+
+There are no strict rules for choosing one over the other. It's a matter of personal preference that usually depends on context.
+
+[case]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#case/2
+[exercism-multiple-clause-functions]: https://exercism.org/tracks/elixir/concepts/multiple-clause-functions
+[exercism-pattern-matching]: https://exercism.org/tracks/elixir/concepts/pattern-matching
+[exercism-guards]: https://exercism.org/tracks/elixir/concepts/guards
+
+
+## Charlists
+
+Charlists are created using the `~c` Sigil.
+
+```elixir
+~c"hello"
+```
+
+~~~~exercism/note
+Note that in older versions of Elixir, charlists are represented as `'hello'` with single quotes.
+~~~~
+
+A charlist is a list of integers. The integers represent the Unicode values of a given character — also known as code points.
+
+```elixir
+[65, 66, 67]
+# => ~c"ABC"
+```
+
+## Charlists _are_ lists
+
+```elixir
+~c"" === []
+# => true
+
+is_list(~c"hello")
+# => true
+```
+
+Because charlist are lists, you can work with them just like with any other list - using recursion and pattern matching, or using the [`List`][list] module.
+
+```elixir
+[first_letter | _] = ~c"cat"
+first_letter
+# => 99
+
+List.first(~c"hello")
+# => 104
+List.pop_at(~c"hello", 0)
+# => {104, ~c"ello"}
+
+```
+
+You can concatenate two lists together using [`++`][kernel-concat-list].
+
+```elixir
+~c"hi" ++ ~c"!"
+# => ~c"hi!"
+```
+
+The longer the first list is, the slower the concatenation, so avoid repeatedly appending to lists of arbitrary length.
+
+## Printability
+
+If a list of integers contains only integers that are code points of printable character, it will be displayed as a charlist. Even if it was defined using the `[]` syntax.
+
+```elixir
+~c"ABC"
+# => ~c"ABC"
+
+[65, 66, 67]
+# => ~c"ABC"
+```
+
+If a list of integers contains even one code point of an unprintable character (e.g. `0-6`, `14-26`, `28-31`), it will be displayed as a list. Even if it was defined using the`~c""` syntax.
+
+```elixir
+~c"ABC\0"
+# => [65, 66, 67, 0]
+
+[65, 66, 67, 0]
+# => [65, 66, 67, 0]
+```
+
+Printability can be checked with [`List.ascii_printable?`][list-ascii-printable].
+
+```elixir
+List.ascii_printable?([65, 66, 67])
+# => true
+List.ascii_printable?([65, 66, 67, 0])
+# => false
+```
+
+Keep in mind that those are two different ways of _displaying_ the same data. The values are strictly equal.
+
+```elixir
+~c"ABC" === [65, 66, 67]
+# => true
+```
+
+When printing a list with [`IO.inspect`][io-inspect], you can use the [`:charlists`][inspect-opts] option to control how lists are printed.
+
+```elixir
+IO.inspect(~c"ABC", charlists: :as_charlists)
+# => prints ~c"ABC"
+
+IO.inspect(~c"ABC", charlists: :as_lists)
+# => prints [65, 66, 67]
+```
+
+## Code points
+
+You can prepend a character with `?` to get its code point.
+
+```elixir
+?A
+# => 65
+
+[?:, ?)]
+# => ~c":)"
+```
+
+## Charlists vs strings
+
+Charlists and strings consisting of the same characters are not considered equal.
+
+```elixir
+~c"hello" == "hello"
+false
+```
+
+Each value in a charlist is the [Unicode code point of a character][unicode-table] whereas in a string, the code points are encoded as [UTF-8][utf8].
+
+```elixir
+IO.inspect(~c"tschüss", charlists: :as_lists)
+# => prints [116, 115, 99, 104, 252, 115, 115]
+
+IO.inspect("tschüss", binaries: :as_binaries)
+# => prints <<116, 115, 99, 104, 195, 188, 115, 115>>
+```
+
+Note how `ü`, code point `252`, is encoded in UTF-8 as `195` and `188`.
+
+**In practice, charlists are rarely used**. Their main use case is interfacing with Erlang, in particular when using older libraries that do not accept binaries as arguments.
+
+When working with Elixir, **use strings to store text**. The `String` module offers a wide choice of functions to process text, functions not available for charlists.
+
+Charlists can be converted to strings with [`to_string`][kernel-to-string].
+
+```elixir
+to_string(~c"hello")
+# => "hello"
+```
+
+[list]: https://hexdocs.pm/elixir/List.html
+[list-ascii-printable]: https://hexdocs.pm/elixir/List.html#ascii_printable?/2
+[inspect-opts]: https://hexdocs.pm/elixir/Inspect.Opts.html
+[io-inspect]: https://hexdocs.pm/elixir/IO.html#inspect/2
+[kernel-concat-list]: https://hexdocs.pm/elixir/Kernel.html#++/2
+[typespecs-built-in-types]: https://hexdocs.pm/elixir/typespecs.html#built-in-types
+[kernel-to-string]: https://hexdocs.pm/elixir/Kernel.html#to_string/1
+[unicode-table]: https://unicode-table.com/en/
+[utf8]: https://www.fileformat.info/info/unicode/utf8.htm
+
+
+## IO
+
+Functions for handling input and output are provided by the [`IO` module][module-io].
+
+- [`IO.puts/2`][io-puts] writes a string to the standard output, followed by a newline. Returns `:ok`.
+- [`IO.write/2`][io-write] writes a string to the standard output, without adding a newline. Returns `:ok`.
+- [`IO.gets/2`][io-gets] reads a line from the standard input.
+- [`IO.inspect/2`][io-inspect] writes anything to the standard output, accepts useful options like `:label`. Returns the value it was passed unchanged. Useful for debugging.
+
+## `String.Chars` protocol
+
+If you try to pass to [`IO.puts/2`][io-puts] a value that it cannot print, you will see a `Protocol.UndefinedError` error.
+
+```elixir
+IO.puts({:ok, 7})
+# ** (Protocol.UndefinedError) protocol String.Chars not implemented for {:ok, 7} of type Tuple
+```
+
+When this happens, you might want to use [`IO.inspect/2`][io-inspect] instead.
+
+## `IO.inspect/2` for debugging
+
+[`IO.inspect/2`][io-inspect] is perfect for debugging because it returns its argument unchanged, it can print anything, and it offers a `:label` option.
+
+```elixir
+"HELLO\n"
+|> String.trim()
+|> IO.inspect(label: "step 1")
+|> String.downcase()
+|> IO.inspect(label: "step 2")
+
+# > step 1: "HELLO"
+# > step 2: "hello"
+# => "hello"
+```
+
+## IO devices
+
+The first argument to all those functions is an [IO device][io-devices], with the default value of `:stdio` (standard input/output). To write to the standard error device, use `:stderr` instead. An IO device could also be a process, for example one created by calling [`File.open/2`][file-open], which would allow writing to a file.
+
+[module-io]: https://hexdocs.pm/elixir/IO.html
+[io-puts]: https://hexdocs.pm/elixir/IO.html#puts/2
+[io-write]: https://hexdocs.pm/elixir/IO.html#write/2
+[io-gets]: https://hexdocs.pm/elixir/IO.html#gets/2
+[io-inspect]: https://hexdocs.pm/elixir/IO.html#inspect/2
+[io-device]: https://hexdocs.pm/elixir/IO.html#module-io-devices
+[file-open]: https://hexdocs.pm/elixir/File.html#open/2
+[io-devices]: https://hexdocs.pm/elixir/IO.html#module-io-devices
+
+## If
+
+Besides `cond`, Elixir also provides the macros [`if/2` and `unless/2`][getting-started-if-unless] which are useful when you need to check for only one condition.
+
+[`if/2`][kernel-if] accepts a condition and two options. It returns the first option if the condition is _truthy_, and the second option if the condition is _falsy_. [`unless/2`][kernel-unless] does the opposite.
+
+```elixir
+age = 15
+
+if age >= 16 do
+  "You are allowed to drink beer in Germany."
+else
+  "No beer for you!"
+end
+
+# => "No beer for you!"
+```
+
+If the second option is not given, `nil` will be returned.
+
+```elixir
+age = 15
+
+if age >= 16 do
+  "You are allowed to drink beer in Germany."
+end
+
+# => nil
+```
+
+It is also possible to write an `if` expression on a single line. Note the comma after the condition.
+
+```elixir
+if age >= 16, do: "beer", else: "no beer"
+```
+
+This syntax is helpful for very short expressions, but should be avoided if the expression won't fit on a single line.
+
+`unless` with an `else` option should be avoided.
+
+```elixir
+# preferred
+if age >= 16, do: "beer", else: "no beer"
+
+# not preferred
+unless age < 16, do: "no beer", else: "beer"
+```
+
+## _Truthy_ and _falsy_
+
+In Elixir, all datatypes evaluate to a _truthy_ or _falsy_ value when they are encountered in a boolean context (like an `if` expression). All data is considered _truthy_ **except** for `false` and `nil`. In particular, empty strings, the integer `0`, and empty lists are all considered _truthy_ in Elixir. In this way, [Elixir is similar to Ruby but different than JavaScript, Python, or PHP][falsy-various-langs].
+
+```elixir
+truthy? = fn x -> if x, do: "truthy", else: "falsy" end
+
+truthy?.(true)
+# => "truthy"
+truthy?.(0)
+# => "truthy"
+truthy?.([])
+# => "truthy"
+
+truthy?.(false)
+# => "falsy"
+truthy?.(nil)
+# => "falsy"
+```
+
+[`&&/2`][kernel-and], [`||/2`][kernel-or], and [`!/1`][kernel-not] are _truthy_ boolean operators which work with any value, which complement the _strict_ boolean operators [`and/2`][kernel-boolean-and], [`or/2`][kernel-boolean-or], and [`not/1`][kernel-boolean-not].
+
+```elixir
+0 and true
+# => ** (BadBooleanError) expected a boolean on left-side of "and", got: 0
+
+0 && true
+# => true
+```
+
+[getting-started-if-unless]: https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless
+[kernel-if]: https://hexdocs.pm/elixir/Kernel.html#if/2
+[kernel-unless]: https://hexdocs.pm/elixir/Kernel.html#unless/2
+[kernel-boolean-and]: https://hexdocs.pm/elixir/Kernel.html#and/2
+[kernel-boolean-or]: https://hexdocs.pm/elixir/Kernel.html#or/2
+[kernel-boolean-not]: https://hexdocs.pm/elixir/Kernel.html#not/1
+[kernel-and]: https://hexdocs.pm/elixir/Kernel.html#&&/2
+[kernel-or]: https://hexdocs.pm/elixir/Kernel.html#%7C%7C/2
+[kernel-not]: https://hexdocs.pm/elixir/Kernel.html#!/1
+[falsy-various-langs]: https://www.peachesnstink.com/p/vvCzwCNRfqyPSgTdigNPvC
+
+## Nil
+
+[Nil][nil-dictionary] is an English word meaning "nothing" or "zero". In Elixir, `nil` is a special value that means an _absence_ of a value.
+
+```elixir
+# I do not have a favorite color
+favorite_color = nil
+```
+
+`nil` is an atom, but it is usually written as `nil`, not `:nil`. The boolean values `true` and `false` are atoms too.
+
+[//]: # (elixir-formatter-disable-next-block)
+
+```elixir
+nil === :nil
+# => true
+
+true === :true
+# => true
+```
+
+You can check if a variable's value is `nil` using [`==`][kernel-equal], with pattern matching, or using the [`is_nil` guard][kernel-is-nil].
+
+```elixir
+def call(phone_number) do
+  if phone_number == nil do
+    :error
+  end
+end
+```
+
+```elixir
+def call(phone_number) when is_nil(phone_number) do
+  :error
+end
+```
+
+```elixir
+def call(nil) do
+  :error
+end
+```
+
+[nil-dictionary]: https://www.merriam-webster.com/dictionary/nil
+[kernel-is-nil]: https://hexdocs.pm/elixir/Kernel.html#is_nil/1
+[kernel-equal]: https://hexdocs.pm/elixir/Kernel.html#==/2
+
+
+## PIDs
+
+Each Elixir process has its own unique identifier - a _PID_ (process identifier).
+
+- PIDs are their own data type.
+  - You can check if a variable is a PID with [`is_pid/1`][kernel-is-pid]
+- You can get the current process's PID with `self()`.
+- PIDs function as _mailbox addresses_ - if you have a process's PID, you can send a message to that process.
+- PIDs are usually created indirectly, as a return value of functions that create new processes, like `spawn`.
+  - PIDs should not be created directly by the programmer. If it were required, Erlang has a [`list_to_pid/1`][erlang-list-to-pid] function.
+
+[kernel-is-pid]: https://hexdocs.pm/elixir/Kernel.html#is_pid/1
+[erlang-list-to-pid]: https://www.erlang.org/doc/man/erlang.html#list_to_pid-1
+
+
+## Processes
+
+In Elixir, all code runs inside processes. Elixir processes:
+
+- Should not be confused with system processes.
+- Are lightweight.
+- Have specific use cases. They can:
+  - [Keep global state][getting-started-processes-state].
+  - [Contain failure][getting-started-processes-links].
+  - Allow for concurrent and asynchronous code.
+- It is normal to have an Elixir app that runs _hundreds_ of processes, but also one that doesn't explicitly create new processes at all, especially if it's a library.
+
+## Creating processes
+
+By default, a function will execute in the same process from which it was called. When you need to explicitly run a certain function in a new process, use `spawn`:
+
+- [`spawn/1`][kernel-spawn-1] accepts a function that it will execute directly.
+
+  ```elixir
+  spawn(fn -> 2 + 2 end)
+  # => #PID<0.125.0>
+  ```
+
+- [`spawn/3`][kernel-spawn-3] accepts a function that it will execute by the module name, the function name (as atom), and a list of arguments to pass to that function.
+
+  ```elixir
+  spawn(String, :split, ["hello there", " "])
+  # => #PID<0.113.0>
+  ```
+
+  - This data triplet is often called an _MFA_ — _Module, Function, Arguments_.
+
+- A process exits as soon as its function has finished executing.
+
+- You can check if a process is still _alive_ (executing) with [`Process.alive?/1`][process-alive]:
+
+  ```elixir
+  pid = spawn(fn -> 2 + 2 end)
+  Process.alive?(pid)
+  # => false
+  ```
+
+## Messages
+
+Processes do not directly share information with one another. Processes _send messages_ to share data. This concurrency pattern is called the [Actor model][wiki-actor-model].
+
+- Send messages to a process using [`send/2`][kernel-send].
+
+  ```elixir
+  send(pid, :hello)
+  ```
+
+  - The message ends up in the recipient's _mailbox_ in the order that they are sent.
+  - `send` does not check if the message was received nor if the recipient is still alive.
+
+- A message can be of any type.
+- You can receive a message sent to the current process using [`receive/1`][kernel-receive].
+
+  - You need to pattern match on messages.
+  - `receive` waits until one message matching any given pattern is in the process's mailbox.
+    - By default, it waits indefinitely, but can be given a timeout using an `after` block.
+  - Read messages are removed from the process's mailbox. Unread messages will stay there indefinitely.
+    - Always write a catch-all `_` clause in `receive/1` to avoid running of out memory due to piled up unread messages.
+
+  ```elixir
+  receive do
+    {:ping, sender_pid} -> send(sender_pid, :pong)
+    _ -> nil
+  after
+    5000 ->
+      {:error, "No message in 5 seconds"}
+  end
+  ```
+
+## Receive loop
+
+If you want to receive more than one message, you need to call `receive/1` recursively. It is a common pattern to implement a recursive function, for example named `loop`, that calls `receive/1`, does something with the message, and then calls itself to wait for more messages. If you need to carry some state from one `receive/1` call to another, you can do it by passing an argument to that `loop` function.
+
+```elixir
+def loop(state) do
+  receive do
+    :increment_by_one ->
+      loop(state + 1)
+
+    {:report_state, sender_pid} ->
+      send(sender_pid, state)
+      loop(state)
+
+    :stop ->
+      nil
+
+    _ ->
+      loop(state)
+  end
+end
+```
+
+In practice, this approach is rarely used directly. Elixir offers concurrency abstractions, such as the [`Agent` module][agent] or a [`GenServer` behaviour][genserver], that both build on top of the receive loop. However, it is crucial to understand those basics to be able to efficiently use the abstractions.
+
+[getting-started-processes-state]: https://hexdocs.pm/elixir/processes.html#state
+[getting-started-processes-links]: https://hexdocs.pm/elixir/processes.html#links
+[process-alive]: https://hexdocs.pm/elixir/Process.html#alive?
+[agent]: https://hexdocs.pm/elixir/Agent.html
+[genserver]: https://hexdocs.pm/elixir/GenServer.html
+[kernel-spawn-1]: https://hexdocs.pm/elixir/Kernel.html#spawn/1
+[kernel-spawn-3]: https://hexdocs.pm/elixir/Kernel.html#spawn/3
+[kernel-receive]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#receive/1
+[kernel-send]: https://hexdocs.pm/elixir/Kernel.html#send/2
+[wiki-actor-model]: https://en.wikipedia.org/wiki/Actor_model
+
+
+## Bitstrings
+
+Un `bitstring` est une séquence de bits. C'est un type de données fondamental 
+dans le langage Elixir.
+Un `bitstring` est défini par des guillemets `<<` et `>>`.
+
+```elixir
+<<1, 2, 3>>
+```
+
+Par défaut, chaque élément d'un `bitstring` est codé sur 8 bits. Cependant
+il est possible de spécifier le nombre de bits utilisés pour chaque élément
+en ajoutant `::n` ou `n` représente le nombre de bits utilisés pour l'élément.
+
+```elixir
+<<1::4, 1::4>>
+```
+
+### Binary
+
+On peut écrire un segment en binaire en préfixant le littéral avec `0b`. Les valeurs seront néanmoins toujours affichées en binaire dans les résultats de test ou sous iex.
+
+```elixir
+<<0b1011::4>>
+```
+
+### Troncature
+
+Si la valeur dépasse la capacité du nombre de bits spécifiés, la valeur est tronquée
+par la gauche:
+
+```elixir
+<<257::8>>
+```
+
+### Prepending and appending
+
+On peut ajouter des bitstrings avant et après un bitstring existant. On peut utiliser le type `::bitstring` pour ne pas avoir à préciser la taille.
+
+```elixir
+value = <<0b110::3, 0b001::3>>
+new_value = <<0b011::3, value::bitstring, 0b000::3>>
+```
+
+### Pattern matching
+
+Les `bitstrings` peuvent être utilisés dans des expressions de `pattern matching`.
+Il faut connaître le nombre de bits utilisés pour chaque fragment hormis pour le 
+dernier fragment.
+
+```elixir
+<<a::4, b::4>> = <<16>>
+IO.puts("a: #{a}, b: #{b}")
+```
+
+### Inspecting bitstrings
+
+Par défaut, les bitstrings sont affiché en fragments de 8 bits (un octet) même s'ils sont créés avec des fragments de tailles différentes.
+
+```elixir
+<<2011::11>>
+```
+
+Si on crée un bitstring qui représente une chaîne de caractères UTF-8, il est affiché comme une chaîne de caractères.
+
+```elixir
+<<65, 66, 67>>
+```
+

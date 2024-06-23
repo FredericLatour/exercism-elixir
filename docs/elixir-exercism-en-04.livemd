@@ -1,0 +1,716 @@
+## Regular Expressions
+
+Regular expressions (regex) are a powerful tool for working with strings in Elixir. Regular expressions in Elixir follow the **PCRE** specification (**P**erl **C**ompatible **R**egular **E**xpressions). String patterns representing the regular expression's meaning are first compiled then used for matching all or part of a string.
+
+In Elixir, the most common way to create regular expressions is using [the `~r` sigil][sigils-regex]. Sigils provide _syntactic sugar_ shortcuts for common tasks in Elixir. In this case, `~r` is a shortcut for using [`Regex.compile!/2`][regex-compile].
+
+```elixir
+Regex.compile!("test") == ~r/test/
+# => true
+```
+
+The [`=~/2`][regex-match-operator] operator is useful to perform a regex match on a string to return a `boolean` result.
+
+```elixir
+"this is a test" =~ ~r/test/
+# => true
+```
+
+## Regex syntax review
+
+- Some characters in a regular expression pattern have special meaning, to use the character plainly it must be escaped with `\`, e.g. `~r/\?/`.
+- _Character classes_ (e.g. `\d`, `\w`) allow patterns to match a range of characters
+- _Alternations_ (`|`) allow patterns to match one pattern or another
+- _Quantifiers_ (`{N, M}`, `*`, `?`) allow patterns to match a specified number of repeating patterns
+- _Groups_ (`()`) allow parts of patterns to function as a unit
+
+## Captures
+
+Regular expressions are also useful for extracting a portion of a string. This is called _capturing_. To _capture_ a part of a string, create a group (`()`) for the part that you want to capture and use [`Regex.run`][regex-run].
+
+```elixir
+Regex.run(~r/Weight: (\d*)g/, "Weight: 150g")
+# => ["Weight: 150g", "150"]
+```
+
+Captures are numbered (starting at 1) and can also be used in the result when replacing parts of a string with a regular expression:
+
+```elixir
+Regex.replace(~r/Weight: (\d*)g/, "Weight: 150g", "Gewicht: \\1g")
+# => "Gewicht: 150g"
+```
+
+Captures can also be named by appending `?<name>` after the opening parenthesis. Use [`Regex.named_captures/3`][regex-named-captures] to get a map with named captures.
+
+```elixir
+Regex.named_captures(~r/Weight: (?<weight>\d*)g/, "Weight: 150g")
+# => %{"weight" => "150"}
+```
+
+## Modifiers
+
+The behavior of a regular expression can be modified by appending special flags at the end of the regular expression, e.g. `~r/test/i`.
+
+- `caseless` `i` - case insensitive
+  ```elixir
+  "A" =~ ~r/a/
+  # => false
+  "A" =~ ~r/a/i
+  # => true
+  ```
+- `unicode` `u` - enables Unicode specific patterns like `\p` and causes character classes like `\w` etc. to also match on Unicode
+  ```elixir
+  "ö" =~ ~r/^\w$/
+  # => false
+  "ö" =~ ~r/^\w$/u
+  # => true
+  ```
+- [And more: `dotall`, `multiline`, `extended`, `firstline`, `ungreedy`][regex-modifiers]
+
+## Dynamically building regular expressions
+
+Because the `~r` sigil is a shortcut for `"pattern" |> Regex.escape() |> Regex.compile!()`, you may also use string interpolation to dynamically build a regular expression pattern:
+
+```elixir
+anchor = "$"
+regex = ~r/end of the line#{anchor}/
+"end of the line?" =~ regex
+# => false
+"end of the line" =~ regex
+# => true
+```
+
+## Regular expressions vs the `String` module
+
+Although regular expressions are powerful, it is not always wise to them:
+
+- They must be compiled before use, this takes computation time and memory.
+- They may be slower than using plain string functions.
+
+As a rule of thumb, it is better to use the [functions from the `String` module][string-functions] whenever possible.
+
+```elixir
+# Don't use regular expressions to check a suffix:
+if "YELLING!" =~ ~r/!$/, do: "Whoa, chill out!"
+
+# Use a string function:
+if String.ends_with?("YELLING!", "!"), do: "Whoa, chill out!"
+```
+
+[sigils-regex]: https://hexdocs.pm/elixir/sigils.html#regular-expressions
+[string-functions]: https://hexdocs.pm/elixir/String.html#functions
+[regex-modifiers]: https://hexdocs.pm/elixir/Regex.html#module-modifiers
+[regex-character-classes]: https://hexdocs.pm/elixir/Regex.html#module-character-classes
+[regex-run]: https://hexdocs.pm/elixir/Regex.html#run/3
+[regex-named-captures]: https://hexdocs.pm/elixir/Regex.html#named_captures/3
+[regex-match-operator]: https://hexdocs.pm/elixir/Kernel.html#=~/2
+[regex-compile]: https://hexdocs.pm/elixir/Regex.html#compile!/2
+
+
+## Dates and Time
+
+Elixir's standard library offers 4 different modules for working with dates and time, each with its own struct.
+
+- The [`Date` module][date]. A `Date` struct can be created with the [`~D` sigil][sigil-d].
+    ```elixir
+    ~D[2021-01-01]
+    ```
+
+- The [`Time` module][time]. A `Time` struct can be created with the [`~T` sigil][sigil-t].
+    ```elixir
+    ~T[12:00:00]
+    ```
+
+- The [`NaiveDateTime` module][naivedatetime] for datetimes without a timezone. A `NaiveDateTime` struct can be created with the [`~N` sigil][sigil-n].
+    ```elixir
+    ~N[2021-01-01 12:00:00]
+    ```
+
+- The [`DateTime` module][datetime] for datetimes with a timezone. Using this module for timezones other than UTC requires an external dependency, a timezone database. A `DateTime` struct can be represented with the [`~U` sigil][sigil-u], but should be created using `DateTime` functions instead.
+    ```elixir
+    DateTime.new!(~D[2021-01-01], ~T[12:00:00], "Etc/UTC")
+    # => ~U[2021-01-01 12:00:00Z]
+    ```
+
+## Comparisons
+
+To compare dates or times to one another, look for a `compare` or `diff` function in the corresponding module. Comparison operators such as `==`, `>`, and `<` _seem_ to work, but they don't do a correct semantic comparison for those structs.
+
+```elixir
+Date.compare(~D[2020-11-30], ~D[2020-12-01])
+# => :lt
+
+Time.diff(~T[13:45:00], ~T[13:46:30])
+# => -90
+```
+
+## Shifting
+
+Dates, time, and datetimes can be shifted forwards and backwards in time using the `add/2` function from the corresponding module.
+
+```elixir
+# add 4 days
+Date.add(~D[2021-01-01], 4)
+# => ~D[2021-01-05]
+
+# subtract 1 second
+Time.add(~T[12:00:00], -1)
+# => ~T[11:59:59.000000]
+
+# add 4 days and 30 seconds
+NaiveDateTime.add(~N[2021-01-01 12:00:00], 4 * 24 * 60 * 60 + 30)
+# => ~N[2021-01-05 12:00:30]
+```
+
+## Conversions
+
+A `NaiveDateTime` struct can be deconstructed into a `Date` struct and a `Time` struct using [`NaiveDateTime.to_date/1`][naivedatetime-to-date] and [`NaiveDateTime.to_time/1`][naivedatetime-to-time]. The opposite can be achieved with [`NaiveDateTime.new!/2`][naivedatetime-new].
+
+```elixir
+NaiveDateTime.to_date(~N[2021-01-01 12:00:00])
+# => ~D[2021-01-01]
+
+NaiveDateTime.to_time(~N[2021-01-01 12:00:00])
+# => ~T[12:00:00]
+
+NaiveDateTime.new!(~D[2021-01-01], ~T[12:00:00])
+# => ~N[2021-01-01 12:00:00]
+```
+
+[naivedatetime]: https://hexdocs.pm/elixir/NaiveDateTime.html
+[datetime]: https://hexdocs.pm/elixir/DateTime.html
+[time]: https://hexdocs.pm/elixir/Time.html
+[date]: https://hexdocs.pm/elixir/Date.html
+[sigil-t]: https://hexdocs.pm/elixir/Kernel.html#sigil_T/2
+[sigil-d]: https://hexdocs.pm/elixir/Kernel.html#sigil_D/2
+[sigil-u]: https://hexdocs.pm/elixir/Kernel.html#sigil_U/2
+[sigil-n]: https://hexdocs.pm/elixir/Kernel.html#sigil_N/2
+[naivedatetime-to-date]: https://hexdocs.pm/elixir/NaiveDateTime.html#to_date/1
+[naivedatetime-to-time]: https://hexdocs.pm/elixir/NaiveDateTime.html#to_time/1
+[naivedatetime-new]: https://hexdocs.pm/elixir/NaiveDateTime.html#new/2
+[erl-calendar]: https://www.erlang.org/doc/man/calendar.html
+
+## Access Behaviour
+
+Elixir uses [_Behaviours_][behaviours] to provide common generic interfaces while facilitating specific implementations for each module which implements the behaviour. One of those behaviours is the _Access Behaviour_.
+
+The _Access Behaviour_ provides a common interface for retrieving key-based data from a data structure. It is implemented for maps and keyword lists.
+
+The [`Access`][access] module defines the callbacks required for the interface. The [`Map`][map] and [`Keyword`][keyword] modules then implement the required callbacks [`fetch/2`][map-fetch], [`get_and_update/3`][map-get-and-update], and [`pop/2`][map-pop]
+
+To use the behaviour, you may follow a bound variable with _square brackets_ and then use the key to retrieve the value associated with that key. Maps support atom and string keys, while keyword lists only atom keys.
+
+```elixir
+# Atom as key
+my_map = %{key: "my value"}
+my_map[:key]
+# => "my value"
+
+# String as key
+another_map = %{"key" => "my value"}
+another_map["key"]
+# => "my value"
+```
+
+If the key does not exist in the data structure, then `nil` is returned. This can be a source of unintended behavior, because it does not raise an error.
+
+```elixir
+my_map = %{key: "my value"}
+my_map[:wrong_key][:other_wrong_key]
+# => nil
+```
+
+Note that `nil` itself implements the Access Behaviour and always returns `nil` for any key.
+
+```elixir
+nil[:key]
+# => nil
+```
+
+Structs do not implement the Access behaviour.
+
+## Access shortcuts
+
+- [`Kernel`][kernel] provides several functions which make using nested data easier with the access behaviour. See these links to the library documentation:
+  - [`get_in/2`][get-in-2]
+  - [`get_and_update_in/2`][get-and-update-in-2]
+  - [`get_and_update_in/3`][get-and-update-in-3]
+  - [`pop_in/1`][pop-in-1]
+  - [`pop_in/2`][pop-in-2]
+  - [`put_in/2`][put-in-2]
+  - [`put_in/3`][put-in-3]
+  - [`update_in/2`][update-in-2]
+  - [`update_in/3`][update-in-3]
+
+[kernel]: https://hexdocs.pm/elixir/Kernel.html#content
+[behaviours]: https://hexdocs.pm/elixir/Module.html#module-behaviour
+[genserver]: https://hexdocs.pm/elixir/GenServer.html#content
+[supervisor]: https://hexdocs.pm/elixir/Supervisor.html#content
+[application]: https://hexdocs.pm/elixir/Application.html#content
+[access]: https://hexdocs.pm/elixir/Access.html#content
+[map]: https://hexdocs.pm/elixir/Map.html#content
+[map-fetch]: https://hexdocs.pm/elixir/Map.html#fetch/2
+[map-get-and-update]: https://hexdocs.pm/elixir/Map.html#get_and_update/3
+[map-pop]: https://hexdocs.pm/elixir/Map.html#pop/3
+[get-in-2]: https://hexdocs.pm/elixir/Kernel.html#get_in/2
+[get-and-update-in-2]: https://hexdocs.pm/elixir/Kernel.html#get_and_update_in/2
+[get-and-update-in-3]: https://hexdocs.pm/elixir/Kernel.html#get_and_update_in/3
+[pop-in-1]: https://hexdocs.pm/elixir/Kernel.html#pop_in/1
+[pop-in-2]: https://hexdocs.pm/elixir/Kernel.html#pop_in/2
+[put-in-2]: https://hexdocs.pm/elixir/Kernel.html#put_in/2
+[put-in-3]: https://hexdocs.pm/elixir/Kernel.html#put_in/3
+[update-in-2]: https://hexdocs.pm/elixir/Kernel.html#update_in/2
+[update-in-3]: https://hexdocs.pm/elixir/Kernel.html#update_in/3
+[keyword]: https://hexdocs.pm/elixir/Keyword.html
+
+
+## Enum
+
+`Enum` is a very useful module that provides a set of algorithms for working with enumerables. It offers:
+
+- sorting ([`sort/2`][enum-sort/2], [`sort_by/2`][enum-sort_by/2]),
+- filtering ([`filter/2`][enum-filter/2]),
+- grouping ([`group_by/3`][enum-group_by/3]),
+- counting ([`count/2`][enum-count/2])
+- searching ([`find/3`][enum-find/3]),
+- finding min/max values ([`min/3`][enum-min/3], [`max/3`][enum-max/3]),
+- reducing ([`reduce/3`][enum-reduce/3], [`reduce_while/3`][enum-reduce_while/3]),
+
+And much more! Refer to the [`Enum` module documentation][enum-functions] for a full list.
+
+## Enumerable
+
+In general, an _enumerable_ is any data that can be iterated over, a collection. In Elixir, an enumerable is any data type that implements the `Enumerable` [protocol][exercism-protocols]. Those are:
+
+- [`List`][list]
+- [`Map`][map]
+- [`Range`][range]
+- [`Stream`][stream]
+- [`MapSet`][mapset]
+- [`Function`][function]
+- [`Date.Range`][date-range]
+- [`IO.Stream`][io-stream]
+- [`File.Stream`][file-stream]
+
+Don't worry if you don't know them all yet.
+
+Anyone can implement the `Enumerable` protocol for their own custom data structure.
+
+## Reduce
+
+`Enum.reduce/2` allows you to _reduce_ the whole enumerable to a single value. To achieve this, a special variable called the _accumulator_ is used. The accumulator carries the intermediate state of the reduction between iterations. This makes it one of the most powerful functions for enumerables. Many other specialized functions could be replaced by the more general `reduce`. For example...
+
+Finding the maximum value:
+
+```elixir
+Enum.max([4, 20, 31, 9, 2])
+# => 31
+
+Enum.reduce([4, 20, 31, 9, 2], nil, fn x, acc ->
+  cond do
+    acc == nil -> x
+    x > acc -> x
+    x <= acc -> acc
+  end
+end)
+
+# => 31
+```
+
+And even mapping (but it requires reversing the result afterwards):
+
+```elixir
+Enum.map([1, 2, 3, 4, 5], fn x -> x + 10 end)
+# => [11, 12, 13, 14, 15]
+
+Enum.reduce([1, 2, 3, 4, 5], [], fn x, acc -> [x + 10 | acc] end)
+# => [15, 14, 13, 12, 11]
+```
+
+## Mapping maps
+
+- With [`Map.new/2`][map-new]:
+  ```elixir
+  %{a: 1, b: 2}
+  |> Map.new(fn {key, value} -> {key, value * 10} end)
+  ```
+
+- With [`Enum.into/3`][enum-into]:
+  ```elixir
+  %{a: 1, b: 2}
+  |> Enum.into(%{}, fn {key, value} -> {key, value * 10} end)
+  ```
+
+- With [`Enum.map/2`][enum-map]:
+  ```elixir
+  %{a: 1, b: 2}
+  |> Enum.map(fn {key, value} -> {key, value * 10} end)
+  |> Enum.into(%{})
+  ```
+
+[enum-functions]: https://hexdocs.pm/elixir/Enum.html#functions
+[enum-sort/2]: https://hexdocs.pm/elixir/Enum.html#sort/2
+[enum-sort_by/2]: https://hexdocs.pm/elixir/Enum.html#sort_by/2
+[enum-filter/2]: https://hexdocs.pm/elixir/Enum.html#filter/2
+[enum-group_by/3]: https://hexdocs.pm/elixir/Enum.html#group_by/3
+[enum-count/2]: https://hexdocs.pm/elixir/Enum.html#count/2
+[enum-find/3]: https://hexdocs.pm/elixir/Enum.html#find/3
+[enum-min/3]: https://hexdocs.pm/elixir/Enum.html#min/3
+[enum-max/3]: https://hexdocs.pm/elixir/Enum.html#max/3
+[enum-reduce/3]: https://hexdocs.pm/elixir/Enum.html#reduce/3
+[enum-reduce_while/3]: https://hexdocs.pm/elixir/Enum.html#reduce_while/3
+[enum-into]: https://hexdocs.pm/elixir/Enum.html#into/3
+[enum-map]: https://hexdocs.pm/elixir/Enum.html#map/2
+[map-new]: https://hexdocs.pm/elixir/Map.html#new/2
+[list]: https://hexdocs.pm/elixir/List.html
+[map]: https://hexdocs.pm/elixir/Map.html
+[range]: https://hexdocs.pm/elixir/Range.html
+[stream]: https://hexdocs.pm/elixir/Stream.html
+[mapset]: https://hexdocs.pm/elixir/MapSet.html
+[function]: https://hexdocs.pm/elixir/Function.html
+[date-range]: https://hexdocs.pm/elixir/Date.Range.html
+[io-stream]: https://hexdocs.pm/elixir/IO.Stream.html
+[file-stream]: https://hexdocs.pm/elixir/File.Stream.html
+[exercism-protocols]: https://exercism.org/tracks/elixir/concepts/protocols
+
+
+## File
+
+Functions for working with files are provided by the [`File`][file] module.
+
+To read a whole file, use [`File.read/1`][file-read]. To write to a file, use [`File.write/2`][file-write].
+
+The module also provides file functions for copying, removing, renaming etc. Their names are similar to their UNIX equivalents, for example:
+
+- [`File.cp/3`][file-cp] - copy a file.
+- [`File.rm/1`][file-rm] - delete a file.
+- [`File.rename/2`][file-rename] - rename and/or move a file.
+- [`File.mkdir/1`][file-mkdir] - create a directory.
+- [`File.cwd/0`][file-cwd] - get the current working directory.
+
+All the mentioned functions from the `File` module also have a `!` variant that raises an error instead of returning an error tuple (e.g. [`File.read!/1`][file-read-bang]). Use that variant if you don't intend to handle errors such as missing files or lack of permissions.
+
+```elixir
+File.read("does_not_exist")
+# => {:error, :enoent}
+
+File.read!("does_not_exist")
+# => ** (File.Error) could not read file "does_not_exist": no such file or directory
+#        (elixir 1.10.4) lib/file.ex:353: File.read!/1
+```
+
+## Files and processes
+
+Every time a file is written to with [`File.write/2`][file-write], a file descriptor is opened and a new Elixir [process][exercism-processes] is spawned. For this reason, writing to a file in a loop using [`File.write/2`][file-write] should be avoided.
+
+Instead, a file can be opened using [`File.open/2`][file-open]. The second argument to [`File.open/2`][file-open] is a list of modes, which allows you to specify if you want to open the file for reading or for writing.
+
+Commonly-used modes are:
+
+- `:read` - open for reading, file must exist
+- `:write` - open for writing, file will be created if doesn't exist, existing content will be overwritten
+- `:append` - open for writing, file will be created if doesn't exist, existing content will be preserved
+
+For a comprehensive list of all modes, see the documentation of [`File.open/2`][file-open].
+
+[`File.open/2`][file-open] returns a PID of a process that handles the file. To read and write to the file, use functions from the [`IO`][io] module and pass this PID as the [IO device][io-io-devices].
+
+When you're finished working with the file, close it with [`File.close/1`][file-close].
+
+```elixir
+file = File.open!("README.txt", [:write])
+# => #PID<0.157.0>
+
+IO.puts(file, "# README")
+# => :ok
+
+File.close(file)
+# => :ok
+```
+
+## Streaming files
+
+Reading a file with [`File.read/1`][file-read] is going to load the whole file into memory all at once. This might be a problem when working with really big files. To handle them efficiently, you might use [`File.open/2`][file-open] and [`IO.read/2`][io-read] to read the file line by line, or you can stream the file with [`File.stream/3`][file-stream]. The stream implements both the [`Enumerable`][enumerable] and [`Collectable`][collectable] protocols, which means it can be used both for reading and writing.
+
+```elixir
+File.stream!("file.txt")
+|> Stream.map(&(&1 <> "!"))
+|> Stream.into(File.stream!("new_file.txt"))
+|> Stream.run()
+```
+
+## Paths
+
+All the functions working on files require a file path. File paths can be absolute or relative to the current directory. For manipulating paths, use functions from the [`Path`][path] module. For cross-platform compatibility, use [`Path.join/1`][path-join] to create paths. It will choose the platform-appropriate separator.
+
+```elixir
+Path.expand(Path.join(["~", "documents", "important.txt"]))
+"/home/user/documents/important.txt"
+```
+
+[file]: https://hexdocs.pm/elixir/File.html
+[io]: https://hexdocs.pm/elixir/IO.html
+[file-read]: https://hexdocs.pm/elixir/File.html#read/1
+[file-read-bang]: https://hexdocs.pm/elixir/File.html#read!/1
+[file-write]: https://hexdocs.pm/elixir/File.html#write/3
+[file-cp]: https://hexdocs.pm/elixir/File.html#cp/3
+[file-rm]: https://hexdocs.pm/elixir/File.html#rm/1
+[file-cwd]: https://hexdocs.pm/elixir/File.html#cwd/0
+[file-rename]: https://hexdocs.pm/elixir/File.html#rename/2
+[file-mkdir]: https://hexdocs.pm/elixir/File.html#mkdir/1
+[file-copy]: https://hexdocs.pm/elixir/File.html#cp/3
+[file-open]: https://hexdocs.pm/elixir/File.html#open/2
+[file-close]: https://hexdocs.pm/elixir/File.html#close/1
+[file-stream]: https://hexdocs.pm/elixir/File.html#stream!/3
+[io-io-devices]: https://hexdocs.pm/elixir/IO.html#module-io-devices
+[io-read]: https://hexdocs.pm/elixir/IO.html#read/2
+[enumerable]: https://hexdocs.pm/elixir/Enumerable.html
+[collectable]: https://hexdocs.pm/elixir/Collectable.html
+[path]: https://hexdocs.pm/elixir/Path.html
+[path-join]: https://hexdocs.pm/elixir/Path.html#join/1
+[exercism-processes]: https://exercism.org/tracks/elixir/concepts/processes
+
+
+## Tail Recursion
+
+La partie sur la récursion d'Exercism n'est pas des plus lumineuses. Je vais l'aborder différemment.
+
+Chaque appel de fonction consomme de la mémoire (variables locales, paramètres, etc ..) dans un espace mémoire réservé et de taille fixe appelé la pile (stack). Dans ces conditions, une fonction récursive qui traite un volume de données important peut rapidement consommer toute la mémoire disponible de la pile et planter le programme avec la fameuse erreur "Stack Overflow".
+
+Pour contourner ce problème, certains langages comme Elixir (et la plupart des langages fonctionnels) supportent un mécanisme appelé récursion terminale (Tail Call Recursion).  
+Ce mécanisme décrit une situation où l'appel récursif est la dernière opération effectuée par la fonction avant de retourner un résultat. Dans ce cadre, en schématisant, la récursion est remplacée par une boucle, évitant ainsi de consommer de la mémoire sur la pile.
+
+La fonction suivante permet de compter les éléments d'une liste sans utiliser de Tail Call Recursion. La dernière opération est constitué par une expression `1 + count(tail)` et pas uniquement par un appel récursif.
+
+```elixir
+defmodule Recursion do
+  def count([]), do: 0
+  def count([_head | tail]), do: 1 + count(tail)
+end
+
+Recursion.count([1, 2, 3])
+```
+
+Pour obtenir une fonction avec récursion terminale, nous devons utiliser un accumulateur. Pour éviter d'exposer l'utilisateur de la fonction à cette complexité supplémentaire, on utilisera généralement une fonction publique sans accumulateur. Cette dernière appelle ensuite une fonction privée qui met en oeuvre la récursion terminale à l'aide d'un accumulateur.  
+La même fonction que précédemment utilisant cette approche devrait clarifier la démarche:
+
+```elixir
+defmodule TailCallRecursion do
+  # fonction publique sans accumulateur
+  def count(list), do: do_count(list, 0)
+
+  # fonctions privées mettant en oeuvre le mécanisme de récursion terminale
+  defp do_count([], acc), do: acc
+  defp do_count([_head | tail], acc), do: do_count(tail, acc + 1)
+end
+
+TailCallRecursion.count([1, 2, 3])
+```
+
+```elixir
+defmodule Fact do
+  # Non tail recursive version
+  def non_tail(0), do: 1
+
+  def non_tail(n) when n > 0 do
+    n * non_tail(n - 1)
+  end
+
+  # Tail recursive version
+  def tail_rec(n), do: do_tail_rec(n, 1)
+  defp do_tail_rec(0, acc), do: acc
+  defp do_tail_rec(curr, acc), do: do_tail_rec(curr - 1, acc * curr)
+
+  def run_benchmark do
+    Benchee.run(%{
+      "non_tail_recursive" => fn -> Fact.non_tail(200) end,
+      "tail_recursive" => fn -> Fact.tail_rec(200) end
+    })
+  end
+end
+
+Fact.run_benchmark()
+```
+
+```elixir
+# Define the Fibonacci module with all three implementations
+defmodule Fibonacci do
+  # Non-tail-recursive version
+  def non_tail_recursive(0), do: 0
+  def non_tail_recursive(1), do: 1
+
+  def non_tail_recursive(n) when n > 1 do
+    non_tail_recursive(n - 1) + non_tail_recursive(n - 2)
+  end
+
+  # Tail-recursive version
+  def tail_recursive(n), do: tail_recursive(n, 0, 1)
+
+  defp tail_recursive(0, a, _), do: a
+
+  defp tail_recursive(n, a, b) when n > 0 do
+    tail_recursive(n - 1, b, a + b)
+  end
+
+  # Memoized Fibonacci version
+  def memoized_fib(n), do: memoized_fib(n, %{0 => 0, 1 => 1})
+
+  defp memoized_fib(0, memo), do: {0, memo}
+  defp memoized_fib(1, memo), do: {1, memo}
+
+  defp memoized_fib(n, memo) do
+    case Map.fetch(memo, n) do
+      {:ok, value} ->
+        {value, memo}
+
+      :error ->
+        {n_minus_1, memo} = memoized_fib(n - 1, memo)
+        {n_minus_2, memo} = memoized_fib(n - 2, memo)
+        value = n_minus_1 + n_minus_2
+        {value, Map.put(memo, n, value)}
+    end
+  end
+
+  def run_benchmark do
+    Benchee.run(%{
+      "fb_non_tail_recursive" => fn -> Fibonacci.non_tail_recursive(30) end,
+      "fb_tail_recursive" => fn -> Fibonacci.tail_recursive(30) end,
+      "memoized_fib" => fn -> Fibonacci.memoized_fib(30) end
+    })
+  end
+end
+
+Fibonacci.run_benchmark()
+```
+
+## Structs
+
+[Structs][getting-started] are special [maps][maps] with a defined set of keys.
+
+- Structs provide compile-time checks and default values.
+- A struct is named after the module it is defined in.
+- To define a struct use the [`defstruct`][docs-defstruct] construct.
+  - The construct usually immediately follows after the module definition.
+- `defstruct` accepts either a list of [atoms][atom] (for nil default values) or keyword lists (for specified default values).
+  - The fields without defaults must precede the fields with default values.
+
+```elixir
+defmodule Plane do
+  defstruct [:engine, wings: 2]
+end
+
+plane = %Plane{}
+# => %Plane{engine: nil, wings: 2}
+```
+
+## Accessing fields and updating
+
+- Most functions that work with [maps][maps] will also work with structs.
+  - The [_Access Behaviour_][access-behaviour] is an exception and is **not** implemented for structs.
+- It is recommended to use the _static access operator_ `.` to access struct fields.
+
+- Get/fetch field values:
+
+  ```elixir
+  plane = %Plane{}
+  plane.engine
+  # => nil
+  Map.fetch(plane, :wings)
+  # => {:ok, 2}
+  ```
+
+- Update field values
+
+  ```elixir
+  plane = %Plane{}
+  %{plane | wings: 4}
+  # => %Plane{engine: nil, wings: 4}
+  ```
+
+## Enforcing field value initialization
+
+- The [`@enforce_keys` module attribute][enforcing-keys] creates a run-time check that specified fields must be initialized to a **non**-`nil` value when the struct is created.
+- `@enforce_keys` is followed by a list of the field keys (which are [atoms][atom]).
+- If an enforced key is not initialized, an error is raised.
+
+```elixir
+defmodule User do
+  @enforce_keys [:username]
+  defstruct [:username]
+end
+
+%User{}
+# => (ArgumentError) the following keys must also be given when building struct User: [:username]
+```
+
+[atom]: https://hexdocs.pm/elixir/basic-types.html#atoms
+[access-behaviour]: https://hexdocs.pm/elixir/Access.html#content
+[maps]: https://hexdocs.pm/elixir/Map.html#content
+[getting-started]: https://hexdocs.pm/elixir/structs.html
+[docs-defstruct]: https://hexdocs.pm/elixir/Kernel.html#defstruct/1
+[enforcing-keys]: https://hexdocs.pm/elixir/Kernel.html#defstruct/1-enforcing-keys
+
+
+## List Comprehensions
+
+[Comprehension][for] provide a facility for transforming _Enumerables_ easily and declaratively. They are _syntactic sugar_ for iterating through enumerables in Elixir.
+
+[//]: # (elixir-formatter-disable-next-block)
+
+```elixir
+for s <- ["a", "b", "hello", "c"], # 1. generator
+  String.length(s) == 1,           # 2. filter
+  into: "",                        # 3. collectable
+  do: String.upcase(s)
+
+# => "ABC"
+```
+
+There are three parts to a comprehension:
+
+1. _generators_:
+   - Values enumerated from structures that implement the [_Enumerable_][enumerable] protocol.
+   - Pattern matching expressions to destructure enumerated values.
+2. _Filters_: Boolean conditions, used to select which enumerated values to use when creating the new values.
+3. _Collectables_: A structure which implements the [_Collectable_][collectable] protocol, used to collect the new values.
+
+There are single- and multi-line comprehensions. When more than one generator is used, a [cartesian product][cartesian-product] of the values generated is enumerated. That means that each value generated by the first generator will be paired once with each value generated by the second generator.
+
+```elixir
+for n <- [0, 1, 2, 3], do: n + 1
+# => [1, 2, 3, 4]
+
+for x <- [0, 1],
+    y <- [0, 1] do
+  {x, y}
+end
+
+# => [{0, 0}, {0, 1}, {1, 0}, {1, 1}]
+```
+
+The value in the do-block is inserted into the _collectable_ **for each value generated** from the _enumerable_.
+
+```elixir
+for _ <- [1, 2, 3], do: :a
+# => [:a, :a, :a]
+```
+
+Pattern matching can occur in the comprehension, either on the left side of the `<-` or on their own line.
+
+```elixir
+for {atom, str} <- [a: "string"], do: str
+# => ["string"]
+
+for pair <- [a: "string"],
+    {atom, str} = pair do
+  str
+end
+
+# => ["string"]
+```
+
+[for]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#for/1
+[collectable]: https://hexdocs.pm/elixir/Collectable.html
+[enumerable]: https://hexdocs.pm/elixir/Enumerable.html
+[cartesian-product]: https://en.wikipedia.org/wiki/Cartesian_product
+

@@ -1,0 +1,545 @@
+# Elixir Exercism I
+
+```elixir
+Mix.install([
+  {:benchee, "~> 1.0"}
+])
+```
+
+## Basics
+
+Elixir est un langage a typage dynamique. Le type d'une variable est déterminé à l'exécution du code.
+
+l'opérateur `=` (match) permet de lier (bind) une valeur à une variable. Exercism est plutôt très concis sur le sujet. Pour qui n'a pas un peu d'expérience en matière de langages fonctionnels, l'information peu paraître un peu nébuleuse. Nous allons essayer d'étoffer cette notion.
+
+Dans un langage non fonctionnel où les données sont `mutables`, on conçoit en générale une variable comme un espace pouvant accueillir une valeur.  
+L'expression `a = 12` sous-entend que `a` est un conteneur ou un espace dans lequel on enregiste la valeur 12. L'opérateur `=` est conçu comme un opérateur d'assignation d'une valeur de la variable. On peut ultérieurement altérer la valeur de la variable : `a = a + 1`
+
+Dans un langage fonctionnel où les données sont `immutables` (ne peuvent être modifiées), on conçoit en général une variable comme un label associé à une valeur (semblable à la démarche mathématique).  
+Dans ce cadre, l'expression `a = 12` est conçue comme le fait d'attacher le nom `a` à la valeur 12. Il est à noter que de nombreux langages fonctionnels accepteront une opération telle que `a = a + 1` qui peut sembler similaire en apparence. Cependant dans le cadre d'un langage tel que Elixir, une nouvelle valeur égale à la valeur de `a + 1` est crée et se voir assigner le nom `a`. L'ancienne valeur de `a` est détruite (ou mise à disposition du garbage collector).
+
+Dans le cadre d'Elixir, l'opérateur `=` va encore au delà de l'attachement d'une valeur, il s'agit en réalité d'un opérateur qui effectue un `pattern matching` avec la valeur à droite du signe `=`. On ne va pa rentrer dans le détail à ce stade mais l'expression suivante devrait donner une idée de ce concept:
+
+```elixir
+[a, b] = [1, 2]
+IO.puts("a = #{a}, b = #{b}")
+```
+
+### Modules
+
+Les modules constituent les éléments de base d'organisation du code Elixir.
+
+* Un module est visible par tous les autres modules.
+* Un module est défini par `defmodule`.
+
+```elixir
+defmodule MyModule do
+  z = 42
+  z
+end
+```
+
+### Named Functions
+
+On parle de fonctions nommées par opposition aux fonctions anonymes. Cela sera sous-entendu dans la suite de la sections.  
+Toutes les fonctions doivent être définies dans un module
+
+* les fonctions publiques sont défines avec `def`.
+* les fonctions privées sont définies avec `defp`.
+* la valeur de la dernière expression d'une fonction est retournée implicitement. Il n'y a pas d'instruction `return`.
+* les fonctions courtes peuvent être écrites sur une ligne avec une syntaxe spécifique.
+
+```elixir
+defmodule Functions do
+  def increment(n) do
+    n + 1
+  end
+
+  def call_private_increment(n), do: private_increment(n)
+
+  defp private_increment(n) do
+    n + 1
+  end
+
+  def short_increment(n), do: n + 1
+end
+
+IO.puts(
+  "increment(5): #{Functions.increment(5)}, short_increment(6): #{Functions.short_increment(6)} "
+)
+```
+
+* La fonction `private_increment` n'est pas accessible à l'extérieur du module `Functions`.
+
+* A l'intérieur d'un module, la fonction peut être invoquée directement par son nom.
+
+* A l'extérieur du module, la fonction est invoquée précédée du nom du module (ie: `Functions.increment(5)`)
+
+* **l'arité** d'une fonction est un concept important en Elixir. l'arité indique le nombre d'argument d'arguments ou paramètres d'une fonction.
+
+La fonction `add` suivante est une fonction d'arité 3. L'arité d'une fonction est généralement indiqué de la façon suivante: `add/3`
+
+```elixir
+defmodule Arity do
+  def add(x, y, z), do: x + y + z
+end
+```
+
+### Naming Conventions
+
+Les noms de modules utilise la convention `PascalCase` (comme les classes en javascript). Un module doit commencer par une lettre (majuscule) et peut contenir des lettres (A-Z|a-z), des nombres (0-9) ou encore des caractères de soulignement (_).
+
+Les noms de variables et de fonctions utilisent la conventions snake_case. les noms de variables ou fonctions doivent commencer avec un `underscore` ou une lettre minuscule (a-z), et peuvent contenir des lettres, des nombres, des `underscore` et peuvent se terminer avec un un point d'exclamtion ou d'interrogation.
+
+* le point d'interrogation est généralement utiliser pour indiquer qu'une fonction retourne une valeur booléene (`def even?(n), do: rem(n,2) == 0`).
+* le point d'exclamation indiquera en générale une fonction succeptible de lever une erreur.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Integers
+
+Les entiers sont des nombres écrits avec un ou plusieurs chiffres. Vous pouvez effectuer les [principales opérations mathématiques](https://hexdocs.pm/elixir/basic-types.html#basic-arithmetic) sur ces nombres.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Strings
+
+Les chaines littérales sont des séquences de caractères entourées par des guillemets.
+
+```elixir
+string = "This is a string"
+```
+
+### Standard library
+
+La documentation de la librairie standard est disponible en ligne at [hexdocs.pm/elixir](https://hexdocs.pm/elixir/Kernel.html#content).
+
+* la plupart des types ont un module associé (ie: `Integer`, `Float`, `String`, `Typle`, `List`)
+
+Le module `Kernel` est un module particulier:
+
+* il est importé automatiquement
+* ses fonctions peuvent être utilisées sans être préfixées par le nom du module.
+* il fournit un ensemble de fonctions considérées comme essentielles.
+
+<!-- livebook:{"break_markdown":true} -->
+
+### Code comments
+
+Les lignes de commentaires sont précédées par un `#`.
+
+```elixir
+# ceci est un commentaire
+a = 42
+```
+
+### En savoir plus
+
+* [Getting Started guide - Basic Types](https://hexdocs.pm/elixir/basic-types.html)
+* [Basics - Elixir School](https://elixirschool.com/en/lessons/basics/basics/)
+* [Overview of the standard library](https://hexdocs.pm/elixir/Kernel.html#module-the-standard-library)
+
+
+## About Booleans
+
+Elixir représente les valeurs vrai et faux avec le type booléen. Il y a seulement deux valeurs: `true` et `false`. Ces valeurs peuvent être combinées avec des opérateurs booléens (`and/2`, `or/2`, `not/1`)
+
+```elixir
+true_variable = true and true
+false_variable = true and false
+
+true_variable = false or true
+false_variable = false or false
+
+true_variable = not false
+false_variable = not true
+```
+
+Les opérateurs [`and/2`][strict-and], [`or/2`][strict-or] et [`not/1`][strict-not] sont strinctement booléens. Ils nécessitent que leur premier argument soit un booléen. Il y a également des opérateurs booléens équivalents qui fonctionnent avec n'importe quel type d'argument ([`&&/2`][and], [`||/2`][or], and [`!/1`][not]).
+
+Les opérateurs booléens utilisent une évaluation avec court-circuit ce qui veut dire que l'évaluation s'arrête dès que le résultat est connu. `true or whatever()` donnera toujours `true` indépendemment de la valeur retournée par `whatever()`, `whatever` n'a pas besoin d'être évalué.
+
+Attention à l'order de priorité des opérateurs. Le mieux est d'utiliser des parenthèses pour éviter toute ambiguité
+
+```elixir
+not true and false
+```
+
+```elixir
+not (true and false)
+```
+
+Quand une fonction returne une valeur booléenne, [par convention][naming], on termine en général cette fonction par un point d'interrogation (`?`).
+
+```elixir
+defmodule MyModuleBool do
+  def either_true?(a, b), do: a or b
+end
+```
+
+Noter cependant que les fonctions qui sont compatibles avec les `clauses guard` (guard clauses) suivent la convention Erlang et sont préfixées par `is_` (ie: `is_even`) et ne se terminent pas par un point d'exclamation.
+
+## About Integers
+
+Elixir propose deux types de nombres - les entiers et les flottants (integers and floats).
+
+Des fonctions utiles pour manipuler les entiers sont disponibles dna le module [`Integer`][integer].
+
+```elixir
+Integer.digits(123)
+```
+
+Les `Big integers` (mais aussi les flottants) sont en général formattés en séparant les groupes de 3 chiffres par un caractères de soulignement.
+
+```elixir
+1_000_000
+```
+
+la taille maximum d'un nombre en Elixir est seulement limitée par la mémoire disponible car élixir utilise une [arithmétique multiprécision][arbitrary-precision-arithmetic].
+
+Elixir supporte aussi des notations spécifiques pour saisir des [binary, octal, and hexadecimal integers][integers-in-other-bases].
+
+```elixir
+0b0100
+```
+
+```elixir
+0o555
+```
+
+```elixir
+0xFF
+```
+
+### Comparaison
+
+Les entiers et les flottants peuvent être considérés comme égaux ([`==`][kernel-equal]) s'ils ont la même valeur. Cependant, comme leurs types sont différents, ils ne sont pas strictement égaux ([`===`][kernel-strictly-equal]).
+
+```elixir
+1 == 1.0
+```
+
+```elixir
+1 === 1.0
+```
+
+## About floating points
+
+Les nombres flottants sont des nombres avec un ou plusieurs chiffres après la virgule.
+Ils utilisent un format double-précision sur 64 bits.
+
+```elixir
+float = 3.45
+```
+
+Elixir supporte également la notation scientifique:
+
+```elixir
+1.25e-2
+```
+
+### Erreurs d'arrondi
+
+Floats are infamous for their rounding errors.
+Les flottants sont tristement célèbres pour les erreurs d'arrondi
+
+```elixir
+0.1 + 0.2
+```
+
+Ces problématiques ne sont pas spécifiques à Elixir et touchent tous les langages de programmation.
+Un système d'une base donnée ne peut exprimer des fractions exactes que si le dénominateur est un
+facteur premier de la base.
+En binaire, la base utilisée par les ordinateurs, seuls 1/2, 1/4 et 1/8 peuvent être exprimés
+correctement. Les autres fractions ne sont que des approximations.
+
+
+```elixir
+# 3/4
+Float.ratio(0.75)
+```
+
+```elixir
+# 3/5
+Float.ratio(0.6)
+```
+Ce problème est expliqué plus en détail à [0.30000000000000004.com][0.30000000000000004.com]. 
+
+### Comparaisons
+
+Comme déjà indiqué dans la section consacrée aux entier, les entiers et les flottants peuvent être 
+considérés comme égaux ([`==`][kernel-equal]) s'ils ont la même valeur. Cependant, comme leurs 
+types sont différents, ils ne sont pas strictement égaux ([`===`][kernel-strictly-equal]).
+
+```elixir
+1 == 1.0
+```
+
+```elixir
+1 === 1.0
+```
+
+### Conversion
+Les entiers et les flottants peuvent être utilisés dans une même expression.
+Utiliser un floattant dans une expression implique que le résultat sera un flottant.
+
+```elixir
+2 * 3
+```
+
+```elixir
+2 * 3.0
+```
+
+Avec les fonctions du module `Float`, les nombres flottants peuvent être arrondis ([`Float.round`][float-round]), 
+arrondis à la valeur supérieure ([`Float.ceil`][float-ceil]), ou arrondis à la valeur inférieure
+ ([`Float.floor`][float-floor]).  
+La valeur retournée par ces fonctions rest un nombre flottant. Pour obtenir un entier, il convient 
+d'utiliser les fonctions équivalentes du module `Kernel` ([`round`][kernel-round], 
+[`ceil`][kernel-ceil], [`floor`][kernel-floor]).
+
+une autre méthode pour changer un flottant en entier est de tronquer sa partie décimale avec 
+la fonction [`trunc`][kernel-trunc].
+
+```elixir
+Float.ceil(5.2)
+```
+
+```elixir
+ceil(5.2)
+```
+
+```elixir
+trunc(5.2)
+```
+
+[0.30000000000000004.com]: https://0.30000000000000004.com/
+[evanw.github.io-float-toy]: https://evanw.github.io/float-toy/
+[arbitrary-precision-arithmetic]: https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic
+[kernel-equal]: https://hexdocs.pm/elixir/Kernel.html#==/2
+[kernel-strictly-equal]: https://hexdocs.pm/elixir/Kernel.html#===/2
+[kernel-round]: https://hexdocs.pm/elixir/Kernel.html#round/1
+[kernel-ceil]: https://hexdocs.pm/elixir/Kernel.html#ceil/1
+[kernel-floor]: https://hexdocs.pm/elixir/Kernel.html#floor/1
+[kernel-trunc]: https://hexdocs.pm/elixir/Kernel.html#trunc/1
+[float-round]: https://hexdocs.pm/elixir/Float.html#round/2
+[float-ceil]: https://hexdocs.pm/elixir/Float.html#ceil/2
+[float-floor]: https://hexdocs.pm/elixir/Float.html#floor/2
+
+
+
+## Anonymous functions - Fonctions anonymes
+
+[Les fonctions anonymes][anon-fns] sont communément utilisées avec Elixir, pour elles-mêmes, comme valeurs de retour et
+comme arguments dans les fonctions d'ordre supérieur (higher order functions) telles que `Enum.map/2`:
+
+```elixir
+Enum.map([1, 2, 3], fn n -> n + 1 end)
+```
+Comme dans tous les langages fonctionnels de ma connaissance, les fonctions en Elixir
+son traitées comme des citoyens de premère classe (first class citizens):
+
+- les fonctions nommées (`def`) et anonymes peuvent être assignées à des variables.
+- les fonctions nommées et anonymes peuvent être passées comme des données en tant qu'argumment et valeur de retour.
+- les fonctions anonmymes peuvent être créées dynamiquement.
+
+Les fonctions anonymes sont créées avec le mot-clé [`fn`][kernel-fn] et invoquées avec un point (`.`).
+Pour être honnête, je ne suis pas vraiment fan de cette distinction. Voici une discussion sur le sujet 
+sur [StackOverflow](https://stackoverflow.com/questions/18011784/why-are-there-two-kinds-of-functions-in-elixir).
+
+```elixir
+function_variable = fn n -> n + 1 end
+function_variable.(1)
+```
+
+Les fonctions anonymes peuvent être créées avec [le raccourci de capture `&`][kernel-capture].
+
+- Le `&` initial declare le début de l'expression capturée.
+- `&1`, `&2`, etc. indiquent les arguments de la fonction anonyme.
+
+
+  ```elixir
+  # Instead of:
+a = fn x, y -> abs(x) + abs(y) end
+
+  # We can write:
+b = &(abs(&1) + abs(&2))
+
+a.(-1, 2) == b.(-1, 2)
+  ```
+
+- L'opérateur de capture `&` peut aussi être utilisé pour [capturer une fonction nommée eixtantes][capture]
+
+  ```elixir
+  # Instead of:
+  a = fn a, b -> a <= b end
+
+  # We can capture the function using its name and arity:
+  b = &<=/2
+  ```
+
+Variables assigned inside of an anonymous function are not accessible outside of it:
+Les fonctions anonymes en Elixir sont des [closures][closure]. Elles peuvent capturer les variables 
+qui sont dans la portée de la fonction lorsque celle-ci est définie.
+
+
+```elixir
+y = 2
+
+square = fn ->
+  x = 3
+  x * y
+end
+
+square.()
+# => 6
+```
+
+[anon-fns]: https://hexdocs.pm/elixir/anonymous-functions.html
+[kernel-fn]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#fn/1
+[kernel-capture]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#&/1
+[capture]: https://dockyard.com/blog/2016/08/05/understand-capture-operator-in-elixir
+[closure]: https://en.wikipedia.org/wiki/Closure_(computer_programming)
+
+
+## Lists
+
+[Lists][list] are a basic data type in Elixir for holding a collection of values. Lists are _immutable_, meaning they cannot be modified. Any operation that changes a list returns a new list. Lists implement the [Enumerable protocol][enum-protocol], which allows the use of [Enum][enum] and [Stream][stream] module functions.
+
+Lists in Elixir are implemented as [linked lists][linked-list-wiki], and not as arrays of contiguous memory location. Therefore, accessing an element in a list takes linear time depending on the length of the list.
+
+Lists can be written in literal form, head-tail notation, (which uses the `cons` operator `|`), or a combination of both:
+
+```elixir
+# Literal Form
+[]
+[1]
+[1, 2, 3]
+
+# Head-tail Notation
+[]
+# same as [1]
+[1 | []]
+# same as [1, 2, 3]
+[1 | [2 | [3 | []]]]
+
+# Mixed
+# same as [1, 2, 3]
+[1 | [2, 3]]
+```
+
+```elixir
+# same as [1]
+[1 | []]
+# same as [1, 2, 3]
+[1 | [2 | [3 | []]]]
+```
+
+```elixir
+# Mixed
+# same as [1, 2, 3]
+[1 | [2, 3]]
+```
+
+There can also be more than one element before the _cons_ (`|`) operator.
+
+```elixir
+# Multiple prepends
+[1, 2, 3 | [4, 5]]
+```
+
+Head-tail notation can be used to append items to a list.
+
+```elixir
+list = [2, 1]
+
+[3, 2, 1] == [3 | list]
+```
+
+Appending elements to a list during iteration is considered an anti-pattern. Appending an element requires walking through the entire list and adding the element at the end, therefore, appending a new element in each iteration would require walking through the entire list in each iteration.
+
+We can achieve the same result by prepending an element to the reversed list, and then reversing the result. Prepending is a fast operation and requires constant time.
+
+```elixir
+# Appending to the end of a list (potentially slow)
+[1, 2, 3] ++ [4] ++ [5] ++ [6]
+```
+```elixir
+# Prepend to the start of a list (faster, due to the nature of linked lists)
+[6 | [5 | [4 | [3, 2, 1]]]]
+# then reverse!
+```
+
+There are several common `Kernel` functions for lists:
+
+- [`hd/1`][hd] returns the _head_ of a list -- the _first_ item in a list.
+- [`tl/1`][tl] returns the _tail_ of the list -- the list _minus_ the _first_ item.
+- [`length/1`][length] returns the number items in the list.
+- [`in/2`][in] returns a boolean value indicating whether the item is an element in the list.
+
+There is also the [`List` module][list].
+
+Lists may contain any data type and a mix of different data types.
+
+```elixir
+list = [1, :a, 2.0, "string"]
+```
+
+[enum]: https://hexdocs.pm/elixir/Enum.html
+[enum-protocol]: https://hexdocs.pm/elixir/Enumerable.html
+[hd]: https://hexdocs.pm/elixir/Kernel.html#hd/1
+[in]: https://hexdocs.pm/elixir/Kernel.html#in/2
+[length]: https://hexdocs.pm/elixir/Kernel.html#length/1
+[list]: https://hexdocs.pm/elixir/List.html
+[stream]: https://hexdocs.pm/elixir/Stream.html
+[tl]: https://hexdocs.pm/elixir/Kernel.html#tl/1
+[linked-list-wiki]: https://en.wikipedia.org/wiki/Linked_list
+
+
+
+## Atoms
+
+You can use [atoms][atom] whenever you have a set of constants to express. Atoms provide a type-safe way to compare values. An atom is defined by its name, prefixed by a colon:
+
+```elixir
+# Atoms start with a ':',
+# followed by alphanumeric snake_cased characters
+:an_atom
+```
+
+Many functions in Elixir's standard library return an atom to annotate the result:
+
+```elixir
+Enum.fetch([1], 0)
+```
+
+```elixir
+Enum.fetch([1], 2)
+```
+
+[_Atoms_][atom] are internally represented by an integer in a lookup table, which are set automatically. That makes comparing atoms faster than comparing strings. It is not possible to change this internal value. It is generally considered to be an [anti-pattern][anti-pattern] to dynamically create atoms from user supplied input. The runtime only has space for a limited number of atoms, generating new atoms at runtime could fail if the atom table is full.
+
+[atom]: https://hexdocs.pm/elixir/basic-types.html#atoms
+[anti-pattern]: https://en.wikipedia.org/wiki/Anti-pattern
+
+
+
+## Cond
+
+When we want to have branching code, we can use [`cond/1`][cond]:
+
+```elixir
+cond do
+  x > 10 -> :this_might_be_the_way
+  y < 7 -> :or_that_might_be_the_way
+  true -> :this_is_the_default_way
+end
+```
+
+`cond` follows the first path that evaluates to `true`. At least one clause should evaluate to `true` or a run-time error will be raised.
+
+The `cond` conditional is usually used when there are more than two logical branches and each branch has a condition based on different variables. If all the conditions are based on the same variables, a [`case`][case] conditional is a better fit. If there are only two logical branches, use an [`if`][if] conditional instead.
+
+[cond]: https://hexdocs.pm/elixir/case-cond-and-if.html#cond
+[case]: https://hexdocs.pm/elixir/case-cond-and-if.html#case
+[if]: https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless

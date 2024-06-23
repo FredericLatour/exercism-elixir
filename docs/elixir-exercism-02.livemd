@@ -1,0 +1,672 @@
+## Default Arguments
+
+Functions may declare [default values][default-arguments] for one or more arguments.
+
+```elixir
+def number(n \\ 13), do: "That's not my favorite"
+```
+
+- When compiling the above example, Elixir creates a function definition for `number/0` (no arguments), and `number/1` (one argument).
+- If more than one argument has default values, the default values will be applied to the function from left to right to fill in for missing arguments.
+- If the function has multiple clauses, it is required to write a [function header][function-header] for the default arguments.
+- Any expression can serve as the default value.
+- Anonymous functions cannot have default arguments.
+
+```elixir
+def guess(number \\ 5)
+def guess(number) when number != 5, do: false
+def guess(number) when number == 5, do: true
+
+guess()
+# => true
+```
+
+[default-arguments]: https://hexdocs.pm/elixir/modules-and-functions.html#default-arguments
+[function-header]: https://inquisitivedeveloper.com/lwm-elixir-25/
+
+## Guards
+
+[Guards][guards] are used as a complement to [pattern matching][exercism-pattern-matching]. They allow for more complex checks. They can be used in [some, but not all situations][where-guards-can-be-used] where pattern matching can be used, for example in function clauses or case clauses.
+
+```elixir
+def empty?(list) when is_list(list) and length(list) == 0 do
+  true
+end
+```
+
+- Guards begin with the `when` keyword, followed by a boolean expression.
+- Guard expressions are special functions which:
+  - Must be [pure][pure-function] and not mutate any global states.
+  - Must return strict `true` or `false` values.
+- A list of common guards are found in the [Elixir documentation][kernel-guards]. They include:
+  - Type checks: [`is_integer/1`][guard-is-integer], [`is_list/1`][guard-is-list], [`is_nil/1`][guard-is-nil] etc.
+  - Arithmetic operators: [`+/2`][guard-plus], [`-/2`][guard-minus] etc.
+  - Comparisons: [`==/2`][guard-equals], [`>/2`][guard-greater], [`</2`][guard-less] etc.
+  - Boolean operators: [`and/2`][guard-and], [`or/2`][guard-or], [`not/1`][guard-not]
+  - Membership operator: [`in/2`][guard-in]
+- You can define your own guard with [`defguard`][defguard].
+
+  - According to Elixir's [naming convention][naming], guard names should start with `is_`.
+
+    ```elixir
+    defmodule HTTP do
+      defguard is_success(code) when code >= 200 and code < 300
+
+      def handle_response(code) when is_success(code) do
+        :ok
+      end
+    end
+    ```
+
+[guards]: https://hexdocs.pm/elixir/patterns-and-guards.html#guards
+[kernel-guards]: https://hexdocs.pm/elixir/Kernel.html#guards
+[pure-function]: https://gist.github.com/tomekowal/16cb4192b73fe9222de9fd09e653c03e
+[guard-is-integer]: https://hexdocs.pm/elixir/Kernel.html#is_integer/1
+[guard-is-list]: https://hexdocs.pm/elixir/Kernel.html#is_list/1
+[guard-is-nil]: https://hexdocs.pm/elixir/Kernel.html#is_nil/1
+[guard-plus]: https://hexdocs.pm/elixir/Kernel.html#+/2
+[guard-minus]: https://hexdocs.pm/elixir/Kernel.html#-/2
+[guard-equals]: https://hexdocs.pm/elixir/Kernel.html#==/2
+[guard-greater]: https://hexdocs.pm/elixir/Kernel.html#%3E/2
+[guard-less]: https://hexdocs.pm/elixir/Kernel.html#%3C/2
+[guard-and]: https://hexdocs.pm/elixir/Kernel.html#and/2
+[guard-or]: https://hexdocs.pm/elixir/Kernel.html#or/2
+[guard-not]: https://hexdocs.pm/elixir/Kernel.html#not/1
+[guard-in]: https://hexdocs.pm/elixir/Kernel.html#in/2
+[defguard]: https://hexdocs.pm/elixir/Kernel.html#defguard/1
+[naming]: https://hexdocs.pm/elixir/naming-conventions.html#is_-prefix-is_foo
+[where-guards-can-be-used]: https://hexdocs.pm/elixir/patterns-and-guards.html#where-patterns-and-guards-can-be-used
+[exercism-pattern-matching]: https://exercism.org/tracks/elixir/concepts/pattern-matching
+
+
+
+## Multiple clause functions
+
+In Elixir, a single function can have multiple clauses. This is achieved by pattern matching the function's arguments and by using guards.
+
+```elixir
+# pattern matching the argument
+def number(7) do
+  "Awesome, that's my favorite"
+end
+
+# using a guard
+def number(n) when is_integer(n) do
+  "That's not my favorite"
+end
+
+def number(_n) do
+  "That's not even a number!"
+end
+```
+
+- Use [multiple function clauses][multi-function-clause] to extract control logic from functions.
+- Clauses are attempted in order, from top to bottom of the source file until one succeeds.
+- If none succeed, a `FunctionClauseError` is raised by the BEAM VM.
+- If argument variables are not used either in the body of the function or in a guard, they should be prefixed with an `_` otherwise a warning is emitted by the compiler.
+- Anonymous functions can also have multiple clauses.
+    ```elixir
+    fn
+      13 -> "Awesome, that's my favorite"
+      _ -> "That's not my favorite"
+    end
+    ```
+
+Note that multiple clause functions should not be confused with function overloading that you might know from other programming languages. In Elixir, functions are identified by their name and arity only, not types of arguments (since there is no static typing). The function `number/1` from the example is considered to be a single function regardless of how many clauses it has.
+
+[multi-function-clause]: https://hexdocs.pm/elixir/modules-and-functions.html#function-definition
+
+
+## Pattern matching
+
+When writing Elixir functions, we can make use of an [assertive style][assertive-style] with [pattern matching][pattern-match-doc]:
+
+```elixir
+def read_file() do
+  {:ok, contents} = File.read("hello.txt")
+  contents
+end
+```
+
+- Pattern matching is explicitly performed using the match operator, [`=/2`][match-op].
+
+  - Matches succeed when the _shape_ of the data on the left side of the operator matches the right side.
+  - When matches succeed, variables on the left are bound to the values on the right.
+  - Using an underscore, `_`, allows us to disregard the values in those places.
+
+    ```elixir
+    {:ok, number, _} = {:ok, 5, [4.5, 6.3]}
+    number
+    # => 5 is bound to this variable
+    ```
+
+  - [The pin operator `^`][getting-started-pin-operator] can be used to prevent rebounding a variable and instead pattern match against its existing value.
+
+    ```elixir
+    number = 10
+    {:ok, ^number, _} = {:ok, 5, [4.5, 6.3]}
+    # => ** (MatchError) no match of right hand side value: {:ok, 5, [4.5, 6.3]}
+    ```
+
+- Pattern matches may also occur in a function clause head, so that only arguments that match the pattern will invoke the function.
+- Variables can be bound in a function clause pattern match.
+
+  ```elixir
+  defmodule Example do
+    def named_function(:a = atom_variable) do
+      {atom_variable, 1}
+    end
+  end
+
+  Example.named_function(:a)
+  # => {:a, 1}
+  # The first function clause matches, so it is invoked
+
+  Example.named_function(:b)
+  # => ** (FunctionClauseError) no function clause matching in Example.named_function/1
+  ```
+
+[assertive-style]: https://blog.plataformatec.com.br/2014/09/writing-assertive-code-with-elixir/
+[pattern-match-doc]: https://hexdocs.pm/elixir/pattern-matching.html
+[match-op]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#=/2
+[getting-started-pin-operator]: https://hexdocs.pm/elixir/pattern-matching.html#the-pin-operator
+
+
+## Tuples
+
+Tuples are used commonly to group information informally. A common pattern in Elixir is to group function return values with a status.
+
+```elixir
+File.read("hello.txt")
+# => {:ok, "World"}
+
+File.read("invalid.txt")
+# => {:error, :enoent}
+```
+
+- Tuple literals are enclosed with curly braces, `{}`.
+- Tuples may hold any data type in contiguous memory, which is allocated when the tuple is created.
+- Tuples allow for constant-time read-access.
+- When manipulating a tuple, rather than mutating the existing tuple, a new one is created.
+- The performance characteristics of tuples make them ideal for storing related information together, but not for storing collections of items that need iterating or might grow or shrink. In the latter case, [a list is more appropriate][getting-started-lists-or-tuples].
+- The [`Kernel`][kernel-module] and [`Tuple`][tuple-module] modules have useful functions for working with tuples.
+
+[tuple-module]: https://hexdocs.pm/elixir/Tuple.html
+[kernel-module]: https://hexdocs.pm/elixir/Kernel.html
+[getting-started-lists-or-tuples]: https://hexdocs.pm/elixir/lists-and-tuples.html#lists-or-tuples
+
+
+## Pipe operator
+
+The `|>` operator is called [the pipe operator][pipe]. It can be used to chain function calls together in such a way that the value returned by the previous function call is passed as the first argument to the next function call.
+
+```elixir
+String.replace_suffix(String.upcase(String.duplicate("go ", 3)), " ", "!")
+
+# versus
+
+"go "
+|> String.duplicate(3)
+|> String.upcase()
+|> String.replace_suffix(" ", "!")
+```
+
+It can also be used on a single line:
+
+```elixir
+"go " |> String.duplicate(3) |> String.upcase() |> String.replace_suffix(" ", "!")
+```
+
+`Kernel` functions are usually used everywhere without the `Kernel` module name, but the module name is needed when using those functions in a pipe chain. For example, `2 * 3 == 6` can also be written as:
+
+```elixir
+2 |> Kernel.*(3) |> Kernel.==(6)
+```
+
+It is a matter of personal preference when to use the pipe operator and when not. Some Elixir developers like to follow those rules:
+
+- Do not use the pipe operator when doing a single function call.
+
+  ```elixir
+  # do
+  String.split("hello", "")
+
+  # don't
+  "hello" |> String.split("")
+  ```
+
+- Do not create anonymous functions directly in the pipe chain.
+
+  ```elixir
+  # do
+  take_n_letters = fn n -> Enum.take(?a..?z, n) end
+  2 |> Kernel.*(3) |> take_n_letters.()
+
+  # don't
+  2 |> Kernel.*(3) |> (fn n -> Enum.take(?a..?z, n) end).()
+  ```
+
+- Always start a pipe chain with a variable or literal value, not a function call.
+
+  ```elixir
+  # do
+  "hello" |> String.upcase() |> String.split("")
+
+  # don't
+  String.upcase("hello") |> String.split("")
+  ```
+
+[pipe]: https://hexdocs.pm/elixir/Kernel.html#%7C%3E/2
+
+
+## Strings
+
+
+[Strings][getting-started-strings] in Elixir are delimited by double quotes, and they are encoded in UTF-8:
+
+```elixir
+"Hi!"
+```
+
+Strings can be concatenated using the [`<>/2`][kernel-concat] operator:
+
+```elixir
+"Welcome to" <> " " <> "New York"
+# => "Welcome to New York"
+```
+
+Strings in Elixir support [interpolation][string-interpolation] using the `#{}` syntax:
+
+```elixir
+"6 * 7 = #{6 * 7}"
+# => "6 * 7 = 42"
+```
+
+Any Elixir expression is valid inside the interpolation. If a string is given, the string is interpolated as is. If any other value is given, Elixir will attempt to convert it to a string.
+
+```elixir
+"Elixir can convert booleans to strings: #{true}"
+# => "Elixir can convert booleans to strings: true"
+
+"And #{["lists", ", ", "too!"]}"
+# => "And lists, too!"
+
+"But not functions: #{fn x -> x end}"
+
+# => ** (Protocol.UndefinedError) protocol String.Chars not implemented for #Function<7.126501267/1 in :erl_eval.expr/5> of type Function
+#        (elixir 1.10.1) lib/string/chars.ex:3: String.Chars.impl_for!/1
+#        (elixir 1.10.1) lib/string/chars.ex:22: String.Chars.to_string/1
+```
+
+Elixir provides many functions for working with strings in the `String` module. If you are unsure how to process a string in the way you need it, make sure to browse [functions available in the `String` module][string-module-functions] and you will most likely find what you need.
+
+```elixir
+String.downcase("PLEASE NO SHOUTING")
+# => "please no shouting"
+
+String.split("hello", "", trim: true)
+# => ["h", "e", "l", "l", "o"]
+
+String.replace("Do I enjoy Elixir? Maybe...", "Maybe...", "Definitely!")
+# => "Do I enjoy Elixir? Definitely!"
+
+String.at("12345", 2)
+# => "3"
+```
+
+Using some of those functions, remember that the first character in a string has the index `0`.
+
+Some characters need to be [escaped][escape-characters] to be put in a string, e.g. newlines, double-quotes, or the `#` character:
+
+```elixir
+"\"A\" is the \#1st letter of the alphabet.\n"
+```
+
+To comfortably work with texts with a lot of newlines, use the [triple-double-quote heredoc syntax][heredoc-syntax] instead:
+
+```elixir
+"""
+1
+2
+3
+"""
+```
+
+You will very often find this syntax used for documenting code:
+
+```elixir
+defmodule MyApp.Hello do
+  @moduledoc """
+  This is the Hello module.
+  """
+
+  @doc """
+  Says hello to the given `name`.
+
+  Returns `:ok`.
+
+  ## Examples
+
+      iex> MyApp.Hello.world(:john)
+      :ok
+
+  """
+  def world(name) do
+    IO.puts("hello #{name}")
+  end
+end
+```
+
+[getting-started-strings]: https://hexdocs.pm/elixir/basic-types.html#strings
+[kernel-concat]: https://hexdocs.pm/elixir/Kernel.html#%3C%3E/2
+[io-puts]: https://hexdocs.pm/elixir/IO.html#puts/2
+[string-module-functions]: https://hexdocs.pm/elixir/String.html#functions
+[string-interpolation]: https://hexdocs.pm/elixir/String.html#module-interpolation
+[escape-characters]: https://hexdocs.pm/elixir/String.html#module-escape-characters
+[heredoc-syntax]: https://elixir-examples.github.io/examples/multiline-strings-heredocs
+
+
+## Recursion
+
+Recursive functions are functions that call themselves.
+
+A recursive function needs to have at least one _base case_ and at least one _recursive case_.
+
+A _base case_ returns a value without calling the function again. A _recursive case_ calls the function again, modifying the input so that it will at some point match the base case.
+
+Very often, each case is written in its own function clause.
+
+```elixir
+# base case
+def count([]), do: 0
+
+# recursive case
+def count([_head | tail]), do: 1 + count(tail)
+```
+
+A recursive function can have many base cases and/or many recursive cases. For example [the Fibonacci sequence][fibonacci] is a recursive sequence with two base cases:
+
+```elixir
+def fibonacci(0), do: 0
+def fibonacci(1), do: 1
+def fibonacci(n), do: fibonacci(n - 1) + fibonacci(n - 2)
+```
+
+Counting the number of occurrences of some given value `x` in a list has two recursive cases:
+
+```elixir
+def count_occurrences([], _x), do: 0
+def count_occurrences([x | tail], x), do: 1 + count_occurrences(tail, x)
+def count_occurrences([_ | tail], x), do: count_occurrences(tail, x)
+```
+
+## Loops through recursion
+
+Due to immutability, loops in Elixir are written differently from imperative languages. For example, loops commonly look like:
+
+```
+for(i = 0; i < array.size; i++) {
+  # do something with array[i]
+}
+```
+
+In a functional language, mutating `i` (by calling `i++`) is not possible. Thus, loops have to be implemented with recursion.
+
+The equivalent of a `for` loop in Elixir would look like this:
+
+```elixir
+def loop([]), do: nil
+
+def loop([head | tail]) do
+  do_something(head)
+  loop(tail)
+end
+```
+
+In practice, iterating over lists and other enumerable data structures is most often done using the [`Enum`][module-enum] module. Under the hood, functions from the `Enum` module are [implemented using recursion][enumerable-list-reduce-implementation].
+
+## Infinite execution
+
+Recursive functions, if implemented incorrectly, might never return their result. This can be problematic because each time a function is called, a reference is stored in memory where the VM should return the result (on the [call stack][wiki-call-stack]). If a recursive function calls itself infinitely, it is possible to run out of memory causing the VM to crash (a [stack overflow error][wiki-stack-overflow]). The Erlang VM, on which Elixir runs, is specially optimized for recursion and reliability, so it may take a long time before infinite recursion errors are apparent or crashes occur.
+
+This problem of infinite execution can be caused by:
+
+- Forgetting to implement a base case.
+- Not defining the base case as the first clause.
+- Not modifying the argument properly when doing the recursive call, and thus never reaching the base case.
+
+[fibonacci]: https://en.wikipedia.org/wiki/Fibonacci_number
+[module-enum]: https://hexdocs.pm/elixir/Enum.html
+[enumerable-list-reduce-implementation]: https://github.com/elixir-lang/elixir/blob/291ebf7458bb588be64e0a65afc1b9fd51ebc4dc/lib/elixir/lib/enum.ex#L3767-L3768
+[wiki-call-stack]: https://en.wikipedia.org/wiki/Call_stack
+[wiki-stack-overflow]: https://en.wikipedia.org/wiki/Stack_overflow
+
+
+## Maps
+
+[Maps][maps] are a data structure that holds key-value pairs.
+
+- Keys can be of any type, but must be unique.
+- Values can be of any type, they do not have to be unique.
+- Maps do not guarantee the order of their contents despite appearing to do so.
+  - Their underlying implementation gives this misperception:
+    - At small sized (<=32 entries), they are implemented as an ordered [Keyword list][keyword-list].
+    - At larger sizes (>32 entries), they are implemented as a [hash array mapped trie][hamt] &#91;[1][stackoverflow]&#93;.
+- Maps can be declared with a literal form:
+
+  ```elixir
+  # An empty map
+  %{}
+
+  # A map with the atom key :a associated to the integer value 1
+  %{a: 1}
+
+  # A map with the string key "a" associated to the float value 2.0
+  %{"a" => 2.0}
+
+  # A map with the map key %{} with the list value [1 ,2, 3]
+  %{%{} => [1, 2, 3]}
+
+  # A map with keys of different types
+  %{:a => 1, "b" => 2}
+  ```
+
+- Maps can also be instantiated using [`Map.new`][map-new] from the [Map module][map-module]. This might be used if you already have an enumerable collection to turn into a list:
+
+  ```elixir
+  kw_list = [a: 1, b: 2]
+  Map.new(kw_list)
+  # => %{a: 1, b: 2}
+  ```
+
+- Values in a map can be accessed in many different ways:
+
+  ```elixir
+  my_map = %{key: "value"}
+
+  # with a dot if the key is an atom
+  my_map.key
+  # => "value"
+
+  # with [], a syntax provided by the Access behaviour
+  my_map[:key]
+  # => "value"
+
+  # with pattern matching
+  %{key: x} = my_map
+  x
+  # => "value"
+
+  # with Map.get/2
+  Map.get(my_map, :key)
+  # => "value"
+  ```
+
+- The [Map module][map-module], included with the standard library, has many useful functions for using maps.
+
+  ```elixir
+  Map.delete(%{a: 2, b: 3}, :a)
+  # => %{b: 3}
+  ```
+
+- Maps implement the [`Enumerable`][enumerable] protocol, allowing use of [Enum module][enum] functions.
+- [Anonymous functions][anon-fn] or [captured function references][captured-fn] are often required as arguments for [Map][map-module] and [Enum module][enum] functions
+
+  ```elixir
+  # Increment the value by one, if it is not found, update it with 0
+  Map.update(%{a: 1}, :a, 0, &(&1 + 1))
+  # => %{a: 2}
+
+  # Sorting by a specific sub-value
+  list = [{"A", 4}, {"B", 3}, {"C", 2}, {"D", 1}]
+  Enum.sort_by(list, &Kernel.elem(&1, 1))
+  # => [{"D", 1}, {"C", 2}, {"B", 3}, {"A", 4}]
+  ```
+
+[anon-fn]: https://hexdocs.pm/elixir/basic-types.html#anonymous-functions
+[captured-fn]: https://hexdocs.pm/elixir/Function.html#module-the-capture-operator
+[keyword-list]: https://hexdocs.pm/elixir/keywords-and-maps.html#keyword-lists
+[enum]: https://hexdocs.pm/elixir/Enumerable.html#content
+[hamt]: https://en.wikipedia.org/wiki/Hash_array_mapped_trie
+[maps]: https://hexdocs.pm/elixir/keywords-and-maps.html#maps-as-key-value-pairs
+[map-module]: https://hexdocs.pm/elixir/Map.html
+[map-new]: https://hexdocs.pm/elixir/Map.html#new/0
+[stackoverflow]: https://stackoverflow.com/a/40408469
+[enumerable]: https://hexdocs.pm/elixir/Enumerable.html
+
+
+## Module Attributes as constants
+
+[Module attributes][module-attr] may be used like ["constants"][attr-as-const] which are evaluated at compile-time.
+
+```elixir
+defmodule Example do
+  @number 2
+
+  def number(), do: @number
+end
+```
+
+However, they don't strictly behave like constants because they can be overwritten by redefining them in the module:
+
+```elixir
+defmodule Example do
+  @standard_message "Hello, World!"
+  @standard_message "Overwritten!"
+
+  def message(), do: @standard_message
+end
+```
+
+[module-attr]: https://hexdocs.pm/elixir/module-attributes.html
+[attr-as-const]: https://hexdocs.pm/elixir/module-attributes.html#as-constants
+
+
+##  docs
+
+Elixir documentation:
+
+- A first-class citizen.
+- Written in [**Markdown**][markdown].
+- Added by using special module attributes.
+- Typically uses the heredoc syntax for multiline strings.
+
+Module attributes used for documentation:
+
+- `@moduledoc` - describes a module, appears on the first line of the module.
+- `@doc` - describes a function, appears right above the function's definition and its typespec.
+- `@typedoc`- describes a custom type, appears right above the type's definition.
+
+```elixir
+defmodule String do
+  @moduledoc """
+  Strings in Elixir are UTF-8 encoded binaries.
+  """
+
+  @typedoc """
+  A UTF-8 encoded binary.
+  """
+  @type t :: binary
+
+  @doc """
+  Converts all characters in the given string to uppercase according to `mode`.
+
+  ## Examples
+
+      iex> String.upcase("abcd")
+      "ABCD"
+
+      iex> String.upcase("olá")
+      "OLÁ"
+  """
+  def upcase(string, mode \\ :default)
+end
+```
+
+## [Documentation vs. code comments][documentation-vs-comments]
+
+Elixir treats documentation and code comments as two different concepts.
+
+Documentation is an explicit contract between you and the users of your public API (which also includes your coworkers and your future self). Those users might or might not have access to the source code, so the documentation explains how to use your code.
+
+Code comments are aimed at developers reading the source code. They are useful for leaving notes, explaining implementation details, marking opportunities for improvement, and so on.
+
+Because documentation is meant to describe the public API of your code, trying to add a `@doc` attribute to a private function will result in a compilation warning. For explaining private functions, use code comments instead.
+
+```
+warning: defp do_check_length/2 is private, @doc attribute is always discarded for private functions/macros/types
+  lib/form.ex:33: Form.do_check_length/2
+```
+
+## Consuming documentation
+
+There are many different ways to access the documentation of an Elixir project.
+
+### `hexdocs.pm` and `ExDoc`
+
+[`hex.pm`][hex-pm] is a package repository for Elixir and Erlang. Every package published to `hex.pm` will get its documentation automatically published to [`hexdocs.pm`][hexdocs-pm]. There, you can find the documentation for all your favorite Elixir libraries, as well as [Elixir's official documentation][official-documentation] itself.
+
+You can generate a documentation website for your project that looks exactly like Elixir's official documentation without having to publish a package to `hex.pm`. The tool that does it is called [`ExDoc`][ex-doc]. `ExDoc` will produce HTML files that you can browse from your local filesystem.
+
+Make sure to follow the [official recommendations for writing documentation][writing-documentation-recommendations] to ensure best results when using `ExDoc`.
+
+### The `h` IEx helper
+
+You can access the documentation of the standard library, as well as any library you have installed and your Elixir project, directly from your computer.
+
+If you have Elixir installed on your computer, you can use it in [the interactive mode][getting-started-iex] by running the `iex` command (or `iex -S mix` if you want to load the source of your current mix project).
+
+In `iex`, you can type [`h`][iex-h], followed by a space and a module name or a function name, to read its documentation.
+
+[//]: # (elixir-formatter-disable-next-block)
+
+```elixir
+iex()> h String.upcase/1
+# def upcase(string, mode \\ :default)
+#
+# Converts all characters in the given string to uppercase according to mode.
+# (...)
+```
+
+By pressing the tab key after providing a partial module or function name, you can leverage the autocomplete option to discover available modules and functions.
+
+### Modern IDEs
+
+Many modern IDEs that support Elixir can parse and display documentation and typespecs in useful pop-ups, for example [Visual Studio Code][vsc-documentation] or [Intellij with the Elixir plugin][intellij-elixir-documentation].
+
+## Internal modules and function
+
+If a module or a function is intended for internal usage only, you can mark it with `@moduledoc false` or `@doc false`. Those modules and functions will not be included in the generated documentation. Note that that doesn't make them private. They can still be invoked and/or imported. Check the [official documentation about hiding internal modules and functions][hiding-internal-modules-and-functions] to learn about potential solutions to this problem.
+
+[markdown]: https://docs.github.com/en/github/writing-on-github/basic-writing-and-formatting-syntax
+[official-documentation]: https://hexdocs.pm/elixir/
+[ex-doc]: https://hexdocs.pm/ex_doc/readme.html
+[hex-pm]: https://hex.pm/
+[hexdocs-pm]: https://hexdocs.pm/
+[writing-documentation-recommendations]: https://hexdocs.pm/elixir/writing-documentation.html#recommendations
+[intellij-elixir-documentation]: https://github.com/KronicDeth/intellij-elixir#quick-documentation
+[vsc-documentation]: https://fly.io/phoenix-files/setup-vscode-for-elixir-development/
+[iex-h]: https://hexdocs.pm/iex/IEx.Helpers.html#h/1
+[getting-started-iex]: https://hexdocs.pm/elixir/introduction.html#interactive-mode
+[hiding-internal-modules-and-functions]: https://hexdocs.pm/elixir/writing-documentation.html#hiding-internal-modules-and-functions
+[documentation-vs-comments]: https://hexdocs.pm/elixir/writing-documentation.html#documentation-code-comments
