@@ -10,7 +10,9 @@ Mix.install([
 
 Elixir est un langage a typage dynamique. Le type d'une variable est déterminé à l'exécution du code.
 
-l'opérateur `=` (match) permet de lier (bind) une valeur à une variable. Exercism est plutôt très concis sur le sujet. Pour qui n'a pas un peu d'expérience en matière de langages fonctionnels, l'information peu paraître un peu nébuleuse. Nous allons essayer d'étoffer cette notion.
+l'opérateur `=` (match) permet de lier (bind) une valeur à une variable. Exercism est plutôt très concis 
+sur le sujet. Pour qui n'a pas un peu d'expérience en matière de langages fonctionnels, l'information peu 
+paraître un peu nébuleuse. Nous allons essayer d'étoffer cette notion.
 
 Dans un langage non fonctionnel où les données sont `mutables`, on conçoit en générale une variable comme un espace pouvant accueillir une valeur.  
 L'expression `a = 12` sous-entend que `a` est un conteneur ou un espace dans lequel on enregiste la valeur 12. L'opérateur `=` est conçu comme un opérateur d'assignation d'une valeur de la variable. On peut ultérieurement altérer la valeur de la variable : `a = a + 1`
@@ -263,13 +265,13 @@ Float.ratio(0.75)
 # 3/5
 Float.ratio(0.6)
 ```
-Ce problème est expliqué plus en détail à [0.30000000000000004.com][0.30000000000000004.com]. 
+Ce problème est expliqué plus en détail à [0.30000000000000004.com](https://0.30000000000000004.com/). 
 
 ### Comparaisons
 
 Comme déjà indiqué dans la section consacrée aux entier, les entiers et les flottants peuvent être 
-considérés comme égaux ([`==`][kernel-equal]) s'ils ont la même valeur. Cependant, comme leurs 
-types sont différents, ils ne sont pas strictement égaux ([`===`][kernel-strictly-equal]).
+considérés comme égaux ([`==`](https://hexdocs.pm/elixir/Kernel.html#==/2)) s'ils ont la même valeur. Cependant, comme leurs 
+types sont différents, ils ne sont pas strictement égaux ([`===`](https://hexdocs.pm/elixir/Kernel.html#===/2)).
 
 ```elixir
 1 == 1.0
@@ -291,15 +293,15 @@ Utiliser un floattant dans une expression implique que le résultat sera un flot
 2 * 3.0
 ```
 
-Avec les fonctions du module `Float`, les nombres flottants peuvent être arrondis ([`Float.round`][float-round]), 
-arrondis à la valeur supérieure ([`Float.ceil`][float-ceil]), ou arrondis à la valeur inférieure
- ([`Float.floor`][float-floor]).  
+Avec les fonctions du module `Float`, les nombres flottants peuvent être arrondis ([`Float.round`](https://hexdocs.pm/elixir/Float.html#round/2)), 
+arrondis à la valeur supérieure ([`Float.ceil`](https://hexdocs.pm/elixir/Float.html#ceil/2)), ou arrondis à la valeur inférieure
+ ([`Float.floor`](https://hexdocs.pm/elixir/Float.html#floor/2)).  
 La valeur retournée par ces fonctions rest un nombre flottant. Pour obtenir un entier, il convient 
-d'utiliser les fonctions équivalentes du module `Kernel` ([`round`][kernel-round], 
-[`ceil`][kernel-ceil], [`floor`][kernel-floor]).
+d'utiliser les fonctions équivalentes du module `Kernel` ([`round`](https://hexdocs.pm/elixir/Kernel.html#round/1), 
+[`ceil`](https://hexdocs.pm/elixir/Kernel.html#ceil/1), [`floor`](https://hexdocs.pm/elixir/Kernel.html#floor/1)).
 
 une autre méthode pour changer un flottant en entier est de tronquer sa partie décimale avec 
-la fonction [`trunc`][kernel-trunc].
+la fonction [`trunc`](https://hexdocs.pm/elixir/Kernel.html#trunc/1).
 
 ```elixir
 Float.ceil(5.2)
@@ -312,26 +314,10 @@ ceil(5.2)
 ```elixir
 trunc(5.2)
 ```
-<!-- livebook:{"break_markdown":true} -->
->liens
-[0.30000000000000004.com]: https://0.30000000000000004.com/
-[evanw.github.io-float-toy]: https://evanw.github.io/float-toy/
-[arbitrary-precision-arithmetic]: https://en.wikipedia.org/wiki/Arbitrary-precision_arithmetic
-[kernel-equal]: https://hexdocs.pm/elixir/Kernel.html#==/2
-[kernel-strictly-equal]: https://hexdocs.pm/elixir/Kernel.html#===/2
-[kernel-round]: https://hexdocs.pm/elixir/Kernel.html#round/1
-[kernel-ceil]: https://hexdocs.pm/elixir/Kernel.html#ceil/1
-[kernel-floor]: https://hexdocs.pm/elixir/Kernel.html#floor/1
-[kernel-trunc]: https://hexdocs.pm/elixir/Kernel.html#trunc/1
-[float-round]: https://hexdocs.pm/elixir/Float.html#round/2
-[float-ceil]: https://hexdocs.pm/elixir/Float.html#ceil/2
-[float-floor]: https://hexdocs.pm/elixir/Float.html#floor/2
-
-
 
 ## Anonymous functions - Fonctions anonymes
 
-[Les fonctions anonymes][anon-fns] sont communément utilisées avec Elixir, pour elles-mêmes, comme valeurs de retour et
+[Les fonctions anonymes](https://hexdocs.pm/elixir/anonymous-functions.html) sont communément utilisées avec Elixir, pour elles-mêmes, comme valeurs de retour et
 comme arguments dans les fonctions d'ordre supérieur (higher order functions) telles que `Enum.map/2`:
 
 ```elixir
@@ -344,7 +330,7 @@ son traitées comme des citoyens de premère classe (first class citizens):
 - les fonctions nommées et anonymes peuvent être passées comme des données en tant qu'argumment et valeur de retour.
 - les fonctions anonmymes peuvent être créées dynamiquement.
 
-Les fonctions anonymes sont créées avec le mot-clé [`fn`][kernel-fn] et invoquées avec un point (`.`).
+Les fonctions anonymes sont créées avec le mot-clé [`fn`](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#fn/1) et invoquées avec un point (`.`).
 Pour être honnête, je ne suis pas vraiment fan de cette distinction. Voici une discussion sur le sujet 
 sur [StackOverflow](https://stackoverflow.com/questions/18011784/why-are-there-two-kinds-of-functions-in-elixir).
 
@@ -353,7 +339,7 @@ function_variable = fn n -> n + 1 end
 function_variable.(1)
 ```
 
-Les fonctions anonymes peuvent être créées avec [le raccourci de capture `&`][kernel-capture].
+Les fonctions anonymes peuvent être créées avec [le raccourci de capture `&`](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#&/1).
 
 - Le `&` initial declare le début de l'expression capturée.
 - `&1`, `&2`, etc. indiquent les arguments de la fonction anonyme.
@@ -369,7 +355,7 @@ b = &(abs(&1) + abs(&2))
 a.(-1, 2) == b.(-1, 2)
   ```
 
-- L'opérateur de capture `&` peut aussi être utilisé pour [capturer une fonction nommée eixtantes][capture]
+- L'opérateur de capture `&` peut aussi être utilisé pour [capturer une fonction nommée eixtantes](https://dockyard.com/blog/2016/08/05/understand-capture-operator-in-elixir)
 
   ```elixir
   # Instead of:
@@ -380,7 +366,7 @@ a.(-1, 2) == b.(-1, 2)
   ```
 
 Variables assigned inside of an anonymous function are not accessible outside of it:
-Les fonctions anonymes en Elixir sont des [closures][closure]. Elles peuvent capturer les variables 
+Les fonctions anonymes en Elixir sont des [closures](https://en.wikipedia.org/wiki/Closure_(computer_programming)). Elles peuvent capturer les variables 
 qui sont dans la portée de la fonction lorsque celle-ci est définie.
 
 
@@ -395,19 +381,12 @@ end
 square.()
 # => 6
 ```
-<!-- livebook:{"break_markdown":true} -->
-[anon-fns]: https://hexdocs.pm/elixir/anonymous-functions.html
-[kernel-fn]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#fn/1
-[kernel-capture]: https://hexdocs.pm/elixir/Kernel.SpecialForms.html#&/1
-[capture]: https://dockyard.com/blog/2016/08/05/understand-capture-operator-in-elixir
-[closure]: https://en.wikipedia.org/wiki/Closure_(computer_programming)
-
 
 ## Lists
 
-[Lists][list] are a basic data type in Elixir for holding a collection of values. Lists are _immutable_, meaning they cannot be modified. Any operation that changes a list returns a new list. Lists implement the [Enumerable protocol][enum-protocol], which allows the use of [Enum][enum] and [Stream][stream] module functions.
+[Lists](https://hexdocs.pm/elixir/List.html) are a basic data type in Elixir for holding a collection of values. Lists are _immutable_, meaning they cannot be modified. Any operation that changes a list returns a new list. Lists implement the [Enumerable protocol](https://hexdocs.pm/elixir/Enumerable.html), which allows the use of [Enum](https://hexdocs.pm/elixir/Enum.html) and [Stream](https://hexdocs.pm/elixir/Stream.html) module functions.
 
-Lists in Elixir are implemented as [linked lists][linked-list-wiki], and not as arrays of contiguous memory location. Therefore, accessing an element in a list takes linear time depending on the length of the list.
+Lists in Elixir are implemented as [linked lists](https://en.wikipedia.org/wiki/Linked_list), and not as arrays of contiguous memory location. Therefore, accessing an element in a list takes linear time depending on the length of the list.
 
 Lists can be written in literal form, head-tail notation, (which uses the `cons` operator `|`), or a combination of both:
 
@@ -424,19 +403,6 @@ Lists can be written in literal form, head-tail notation, (which uses the `cons`
 # same as [1, 2, 3]
 [1 | [2 | [3 | []]]]
 
-# Mixed
-# same as [1, 2, 3]
-[1 | [2, 3]]
-```
-
-```elixir
-# same as [1]
-[1 | []]
-# same as [1, 2, 3]
-[1 | [2 | [3 | []]]]
-```
-
-```elixir
 # Mixed
 # same as [1, 2, 3]
 [1 | [2, 3]]
@@ -473,34 +439,23 @@ We can achieve the same result by prepending an element to the reversed list, an
 
 There are several common `Kernel` functions for lists:
 
-- [`hd/1`][hd] returns the _head_ of a list -- the _first_ item in a list.
-- [`tl/1`][tl] returns the _tail_ of the list -- the list _minus_ the _first_ item.
-- [`length/1`][length] returns the number items in the list.
-- [`in/2`][in] returns a boolean value indicating whether the item is an element in the list.
+- [`hd/1`](https://hexdocs.pm/elixir/Kernel.html#hd/1) returns the _head_ of a list -- the _first_ item in a list.
+- [`tl/1`](https://hexdocs.pm/elixir/Kernel.html#tl/1) returns the _tail_ of the list -- the list _minus_ the _first_ item.
+- [`length/1`](https://hexdocs.pm/elixir/Kernel.html#length/1) returns the number items in the list.
+- [`in/2`](https://hexdocs.pm/elixir/Kernel.html#in/2) returns a boolean value indicating whether the item is an element in the list.
 
-There is also the [`List` module][list].
+There is also the [`List` module](https://hexdocs.pm/elixir/List.html).
 
 Lists may contain any data type and a mix of different data types.
 
 ```elixir
 list = [1, :a, 2.0, "string"]
 ```
-<!-- livebook:{"break_markdown":true} -->
-[enum]: https://hexdocs.pm/elixir/Enum.html
-[enum-protocol]: https://hexdocs.pm/elixir/Enumerable.html
-[hd]: https://hexdocs.pm/elixir/Kernel.html#hd/1
-[in]: https://hexdocs.pm/elixir/Kernel.html#in/2
-[length]: https://hexdocs.pm/elixir/Kernel.html#length/1
-[list]: https://hexdocs.pm/elixir/List.html
-[stream]: https://hexdocs.pm/elixir/Stream.html
-[tl]: https://hexdocs.pm/elixir/Kernel.html#tl/1
-[linked-list-wiki]: https://en.wikipedia.org/wiki/Linked_list
-
 
 
 ## Atoms
 
-You can use [atoms][atom] whenever you have a set of constants to express. Atoms provide a type-safe way to compare values. An atom is defined by its name, prefixed by a colon:
+You can use [atoms](https://hexdocs.pm/elixir/basic-types.html#atoms) whenever you have a set of constants to express. Atoms provide a type-safe way to compare values. An atom is defined by its name, prefixed by a colon:
 
 ```elixir
 # Atoms start with a ':',
@@ -518,16 +473,12 @@ Enum.fetch([1], 0)
 Enum.fetch([1], 2)
 ```
 
-[_Atoms_][atom] are internally represented by an integer in a lookup table, which are set automatically. That makes comparing atoms faster than comparing strings. It is not possible to change this internal value. It is generally considered to be an [anti-pattern][anti-pattern] to dynamically create atoms from user supplied input. The runtime only has space for a limited number of atoms, generating new atoms at runtime could fail if the atom table is full.
-
-[atom]: https://hexdocs.pm/elixir/basic-types.html#atoms
-[anti-pattern]: https://en.wikipedia.org/wiki/Anti-pattern
-
+[Atoms](https://hexdocs.pm/elixir/basic-types.html#atoms) are internally represented by an integer in a lookup table, which are set automatically. That makes comparing atoms faster than comparing strings. It is not possible to change this internal value. It is generally considered to be an [anti-pattern](https://en.wikipedia.org/wiki/Anti-pattern) to dynamically create atoms from user supplied input. The runtime only has space for a limited number of atoms, generating new atoms at runtime could fail if the atom table is full.
 
 
 ## Cond
 
-When we want to have branching code, we can use [`cond/1`][cond]:
+When we want to have branching code, we can use [`cond/1`](https://hexdocs.pm/elixir/case-cond-and-if.html#cond):
 
 ```elixir
 cond do
@@ -539,9 +490,5 @@ end
 
 `cond` follows the first path that evaluates to `true`. At least one clause should evaluate to `true` or a run-time error will be raised.
 
-The `cond` conditional is usually used when there are more than two logical branches and each branch has a condition based on different variables. If all the conditions are based on the same variables, a [`case`][case] conditional is a better fit. If there are only two logical branches, use an [`if`][if] conditional instead.
-<!-- livebook:{"break_markdown":true} -->
-
-[cond]: https://hexdocs.pm/elixir/case-cond-and-if.html#cond
-[case]: https://hexdocs.pm/elixir/case-cond-and-if.html#case
-[if]: https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless
+The `cond` conditional is usually used when there are more than two logical branches and each branch has a condition based on different variables.
+ If all the conditions are based on the same variables, a [`case`](https://hexdocs.pm/elixir/case-cond-and-if.html#case) conditional is a better fit. If there are only two logical branches, use an [`if`](https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless) conditional instead.
