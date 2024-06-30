@@ -141,7 +141,6 @@ a = 42
 * [Basics - Elixir School](https://elixirschool.com/en/lessons/basics/basics/)
 * [Overview of the standard library](https://hexdocs.pm/elixir/Kernel.html#module-the-standard-library)
 
-
 ## About Booleans
 
 Elixir représente les valeurs vrai et faux avec le type booléen. Il y a seulement deux valeurs: `true` et `false`. Ces valeurs peuvent être combinées avec des opérateurs booléens (`and/2`, `or/2`, `not/1`)
@@ -255,7 +254,6 @@ facteur premier de la base.
 En binaire, la base utilisée par les ordinateurs, seuls 1/2, 1/4 et 1/8 peuvent être exprimés
 correctement. Les autres fractions ne sont que des approximations.
 
-
 ```elixir
 # 3/4
 Float.ratio(0.75)
@@ -265,7 +263,8 @@ Float.ratio(0.75)
 # 3/5
 Float.ratio(0.6)
 ```
-Ce problème est expliqué plus en détail à [0.30000000000000004.com](https://0.30000000000000004.com/). 
+
+Ce problème est expliqué plus en détail à [0.30000000000000004.com](https://0.30000000000000004.com/).
 
 ### Comparaisons
 
@@ -282,6 +281,7 @@ types sont différents, ils ne sont pas strictement égaux ([`===`](https://hexd
 ```
 
 ### Conversion
+
 Les entiers et les flottants peuvent être utilisés dans une même expression.
 Utiliser un floattant dans une expression implique que le résultat sera un flottant.
 
@@ -323,12 +323,13 @@ comme arguments dans les fonctions d'ordre supérieur (higher order functions) t
 ```elixir
 Enum.map([1, 2, 3], fn n -> n + 1 end)
 ```
+
 Comme dans tous les langages fonctionnels de ma connaissance, les fonctions en Elixir
 son traitées comme des citoyens de premère classe (first class citizens):
 
-- les fonctions nommées (`def`) et anonymes peuvent être assignées à des variables.
-- les fonctions nommées et anonymes peuvent être passées comme des données en tant qu'argumment et valeur de retour.
-- les fonctions anonmymes peuvent être créées dynamiquement.
+* les fonctions nommées (`def`) et anonymes peuvent être assignées à des variables.
+* les fonctions nommées et anonymes peuvent être passées comme des données en tant qu'argumment et valeur de retour.
+* les fonctions anonmymes peuvent être créées dynamiquement.
 
 Les fonctions anonymes sont créées avec le mot-clé [`fn`](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#fn/1) et invoquées avec un point (`.`).
 Pour être honnête, je ne suis pas vraiment fan de cette distinction. Voici une discussion sur le sujet 
@@ -341,21 +342,21 @@ function_variable.(1)
 
 Les fonctions anonymes peuvent être créées avec [le raccourci de capture `&`](https://hexdocs.pm/elixir/Kernel.SpecialForms.html#&/1).
 
-- Le `&` initial declare le début de l'expression capturée.
-- `&1`, `&2`, etc. indiquent les arguments de la fonction anonyme.
+* Le `&` initial declare le début de l'expression capturée.
 
+* `&1`, `&2`, etc. indiquent les arguments de la fonction anonyme.
 
   ```elixir
   # Instead of:
-a = fn x, y -> abs(x) + abs(y) end
+  a = fn x, y -> abs(x) + abs(y) end
 
   # We can write:
-b = &(abs(&1) + abs(&2))
+  b = &(abs(&1) + abs(&2))
 
-a.(-1, 2) == b.(-1, 2)
+  a.(-1, 2) == b.(-1, 2)
   ```
 
-- L'opérateur de capture `&` peut aussi être utilisé pour [capturer une fonction nommée eixtantes](https://dockyard.com/blog/2016/08/05/understand-capture-operator-in-elixir)
+* L'opérateur de capture `&` peut aussi être utilisé pour [capturer une fonction nommée eixtantes](https://dockyard.com/blog/2016/08/05/understand-capture-operator-in-elixir)
 
   ```elixir
   # Instead of:
@@ -368,7 +369,6 @@ a.(-1, 2) == b.(-1, 2)
 Variables assigned inside of an anonymous function are not accessible outside of it:
 Les fonctions anonymes en Elixir sont des [closures](https://en.wikipedia.org/wiki/Closure_(computer_programming)). Elles peuvent capturer les variables 
 qui sont dans la portée de la fonction lorsque celle-ci est définie.
-
 
 ```elixir
 y = 2
@@ -384,87 +384,108 @@ square.()
 
 ## Lists
 
-[Lists](https://hexdocs.pm/elixir/List.html) are a basic data type in Elixir for holding a collection of values. Lists are _immutable_, meaning they cannot be modified. Any operation that changes a list returns a new list. Lists implement the [Enumerable protocol](https://hexdocs.pm/elixir/Enumerable.html), which allows the use of [Enum](https://hexdocs.pm/elixir/Enum.html) and [Stream](https://hexdocs.pm/elixir/Stream.html) module functions.
+Les listes [(Lists)](https://hexdocs.pm/elixir/List.html) font partie des types de base d'Elixir pour contenir 
+une collection de valeurs.
+Les listes sont immuables. Tout opération qui modifie une liste retoure une nouvelle list.
+Les listes implémentent le protocole [Enumerable](https://hexdocs.pm/elixir/Enumerable.html) qui permet 
+l'utilisation des fonctions des modules [Enum](https://hexdocs.pm/elixir/Enum.html) et 
+[Stream](https://hexdocs.pm/elixir/Stream.html).
 
-Lists in Elixir are implemented as [linked lists](https://en.wikipedia.org/wiki/Linked_list), and not as arrays of contiguous memory location. Therefore, accessing an element in a list takes linear time depending on the length of the list.
+En Elixir, les listes sont implémentées comme des [listes chaînées](https://fr.wikipedia.org/wiki/Liste_cha%C3%AEn%C3%A9e)
+et non comme des tableaux (comme par exemple en python) utilisant un espace contigüe.
+L'accès à un élément d'une liste se fait de manière séquentielle et nécessite donc un temps O(n) car il peut être nécessaire
+de parcourir toute la liste pour accéder à un élément (le dernier).
 
-Lists can be written in literal form, head-tail notation, (which uses the `cons` operator `|`), or a combination of both:
+Les listes peuvent être écrite en forme littérale, en notation "head-tail" (qui utilise `|`, l'opérateur `cons`) 
+ou encore une combinaison des deux.
 
 ```elixir
 # Literal Form
 []
 [1]
 [1, 2, 3]
+```
 
+```elixir
 # Head-tail Notation
 []
 # same as [1]
 [1 | []]
 # same as [1, 2, 3]
 [1 | [2 | [3 | []]]]
+```
 
+```elixir
 # Mixed
 # same as [1, 2, 3]
 [1 | [2, 3]]
 ```
-
-There can also be more than one element before the _cons_ (`|`) operator.
+Il peut y avoir plus d'un élément avant l'opérateur `|` (_cons_).
 
 ```elixir
 # Multiple prepends
 [1, 2, 3 | [4, 5]]
 ```
 
-Head-tail notation can be used to append items to a list.
-
+La notation Heat-tail peut être utilisée pour ajouter des éléments en début de liste liste.
 ```elixir
 list = [2, 1]
 
 [3, 2, 1] == [3 | list]
 ```
 
-Appending elements to a list during iteration is considered an anti-pattern. Appending an element requires walking through the entire list and adding the element at the end, therefore, appending a new element in each iteration would require walking through the entire list in each iteration.
+ajouter des éléments à une liste de manière itérative est considéré comme un `anti-pattern`.
+Ajouter un élément nécessite de parcourir toute la liste et d'ajouter l'élément à la fin.
+ainsi ajouter un élément à chaque itération impliquerait une complexité de temps O(n*m).
 
-We can achieve the same result by prepending an element to the reversed list, and then reversing the result. Prepending is a fast operation and requires constant time.
+On peut obtenir le même résultat de manière plus efficace en préfixant les éléments 
+à la liste inversée et en inversant à nouveau la liste résulante.
+Ajouter un élément en tête de liste est une opération rapide qui demande un temps constant O(1).
 
 ```elixir
 # Appending to the end of a list (potentially slow)
 [1, 2, 3] ++ [4] ++ [5] ++ [6]
 ```
+
 ```elixir
 # Prepend to the start of a list (faster, due to the nature of linked lists)
 [6 | [5 | [4 | [3, 2, 1]]]]
 # then reverse!
 ```
 
-There are several common `Kernel` functions for lists:
+Il y a de nombreuses fonctions pour les listes dans le module `Kernel`:
 
-- [`hd/1`](https://hexdocs.pm/elixir/Kernel.html#hd/1) returns the _head_ of a list -- the _first_ item in a list.
-- [`tl/1`](https://hexdocs.pm/elixir/Kernel.html#tl/1) returns the _tail_ of the list -- the list _minus_ the _first_ item.
-- [`length/1`](https://hexdocs.pm/elixir/Kernel.html#length/1) returns the number items in the list.
-- [`in/2`](https://hexdocs.pm/elixir/Kernel.html#in/2) returns a boolean value indicating whether the item is an element in the list.
+* [`hd/1`](https://hexdocs.pm/elixir/Kernel.html#hd/1) retourne la tête de la liste(_head_) -- le premier élément de la liste.
+* [`tl/1`](https://hexdocs.pm/elixir/Kernel.html#tl/1) retourne la queue (_tail_) de la liste -- la liste _moins_ le premier élément.
+* [`length/1`](https://hexdocs.pm/elixir/Kernel.html#length/1) retourne le nombre d'éléments dans la liste.
+* [`in/2`](https://hexdocs.pm/elixir/Kernel.html#in/2) retourne une valeur booléenne indiquant si l'élément est un élément de la liste.
 
-There is also the [`List` module](https://hexdocs.pm/elixir/List.html).
+[Un module dédié aux listes](https://hexdocs.pm/elixir/List.html) est également disponible.
 
-Lists may contain any data type and a mix of different data types.
+Les listes peuvent contenir n'importe quel type de donnéee et un mélange de différents types:
 
 ```elixir
 list = [1, :a, 2.0, "string"]
 ```
 
-
 ## Atoms
 
-You can use [atoms](https://hexdocs.pm/elixir/basic-types.html#atoms) whenever you have a set of constants to express. Atoms provide a type-safe way to compare values. An atom is defined by its name, prefixed by a colon:
+Le concept d'atome peut sembler un peu étrange initialement. C'est un type de donnée
+qui représente une constant nommée.
+
+On peut utiliser les [atomes](https://hexdocs.pm/elixir/basic-types.html#atoms)
+quand on veut exprimer un jeu de constantes pour nommer des choses de manière lisible.
+
+
+ An atom is defined by its name, prefixed by a colon:
+ Un atome est défini par son nom précédé par deux points (`:`) .
 
 ```elixir
-# Atoms start with a ':',
-# followed by alphanumeric snake_cased characters
 :an_atom
 ```
 
-Many functions in Elixir's standard library return an atom to annotate the result:
-
+De nombreuses fonctions dans la librairie standard d'Elixir retourne un atome 
+pour annoter le résultat
 ```elixir
 Enum.fetch([1], 0)
 ```
@@ -473,22 +494,54 @@ Enum.fetch([1], 0)
 Enum.fetch([1], 2)
 ```
 
-[Atoms](https://hexdocs.pm/elixir/basic-types.html#atoms) are internally represented by an integer in a lookup table, which are set automatically. That makes comparing atoms faster than comparing strings. It is not possible to change this internal value. It is generally considered to be an [anti-pattern](https://en.wikipedia.org/wiki/Anti-pattern) to dynamically create atoms from user supplied input. The runtime only has space for a limited number of atoms, generating new atoms at runtime could fail if the atom table is full.
+Ils sont également utilisés comme clés dans des Maps:
+```elixir
+user = %{name: "John", status: :active}
+```
+
+Les atomes sont représentés en interne par un entier qui pointe sur une entrée d'une table qui
+qui contient les atomes à proprement parler. Ainsi la comparaison d'atomes est opérée sur des entiers et 
+est donc très rapide.
+
+Créer des atomes dynamiquement à patir de données fournies par l'utilisateur est généralement 
+considéré comme un anti-pattern car l'espace réservé pour les atomes est limité. Cette opération 
+pourrait donc échouer.
 
 
 ## Cond
 
-When we want to have branching code, we can use [`cond/1`](https://hexdocs.pm/elixir/case-cond-and-if.html#cond):
+[`cond/1`](https://hexdocs.pm/elixir/case-cond-and-if.html#cond) est une structure de contrôle
+qui permet d'évaluer plusieurs conditions successives de manière similaire à une succession
+de `elseif` dans d'autres langages.
 
 ```elixir
+x=11
 cond do
   x > 10 -> :this_might_be_the_way
-  y < 7 -> :or_that_might_be_the_way
+  x > 15 -> :or_that_might_be_the_way
+end
+
+```
+Les conditions sont évaluées dans l'ordre et le résultat correspondra à celui de
+ la première condition vraie.  
+Si aucune condition n'est vraie, une exception `CondClauseError` est levée.
+Pour éviter cette situation, on ajoute en général une clause `true` qui sera 
+toujours vraie et permettra de retourner une valeur par défaut.
+
+```elixir
+x=11
+cond do
+  x > 10 -> :this_might_be_the_way
+  x > 15 -> :or_that_might_be_the_way
   true -> :this_is_the_default_way
 end
 ```
 
-`cond` follows the first path that evaluates to `true`. At least one clause should evaluate to `true` or a run-time error will be raised.
+`cond` est généralement utilisé quand il y a plus de deux conditions et que
+chaque condition implique des variables différentes.
 
-The `cond` conditional is usually used when there are more than two logical branches and each branch has a condition based on different variables.
- If all the conditions are based on the same variables, a [`case`](https://hexdocs.pm/elixir/case-cond-and-if.html#case) conditional is a better fit. If there are only two logical branches, use an [`if`](https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless) conditional instead.
+Si toutes les conditions s'appuient sur la même variable, une structure de contrôle [`case`](https://hexdocs.pm/elixir/case-cond-and-if.html#case) 
+peut être plus adapté.
+
+S'il n'y a que deux branches logiques l'utilisation de 
+[`if`](https://hexdocs.pm/elixir/case-cond-and-if.html#if-unless) est plus adaptée.
