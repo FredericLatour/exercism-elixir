@@ -1,0 +1,53 @@
+# Binaries
+
+## Binaries
+
+Elixir fournit une syntaxe élégante pour travailler avec des données binaires comme nous
+l'avons vu avec la forme `<<>>` fournit pour travailler avec les [bitstrings][exercism-bitstrings].
+
+Le type `binary` est une spécialisation du type `bitstring`. Alors que les bitstrings peuvent avoir n'importe quelle taille (en nombre de bits), les données de type `binary` ont un nombre de bits divisibles par 8. En utilisant le type `binary`, on pense en terme d'octets (bytes).  
+Un octet (byte) peut représenter un entier (integer) de 0 à 255. Il est habituel de représenter les octets en hexadécimal (0x00 - 0xFF).
+
+Les littéraux de type `binary` sont définis avec la forme spéciale `<<>>`.  
+Pour définir un littéral de type `binary` on peut utiliser des entiers et de chaînes de caractère.
+
+En cas d'overflow, seuls les 8 derniers bits des entiers plus grands que 255 seront utilisés.
+
+On peut concaténer des données de type `binary` avec l'opérateur`<>/2`.
+
+```elixir
+# Hexadecimal notation
+<<255>> == <<0xFF>>
+```
+
+```elixir
+# Chaînes et entiers 
+<<206, "abc">>
+```
+
+```elixir
+# Overflow
+<<256>>
+```
+
+```elixir
+# Concatenating binaries
+<<1>> <> <<256>> <> <<"a">>
+```
+
+Un octet null (_null-byte_) est un autre nom pour `<<0>>`.
+
+### Pattern matching avec le type binary
+
+Le [Pattern matching][exercism-pattern-matching] peut-être utilisé de manière similaire 
+qu'avec le type `bitstring`.
+
+```elixir
+<<h::binary-size(1), body::binary>> = <<"ab", "cd">>
+IO.puts("h = #{h}, body = #{body}")
+```
+
+```elixir
+<<f::binary-size(1), rest::binary>> = <<1, 25, 255, "cd">>
+IO.puts("f = #{inspect(f)}, rest = #{inspect(rest)}")
+```
